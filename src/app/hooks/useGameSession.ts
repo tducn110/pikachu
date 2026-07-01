@@ -1,0 +1,116 @@
+import { useState, useCallback } from "react";
+import { type ScoreStats, loadStats, saveStats } from "../utils/stats";
+import { getBoardSize } from "../utils/pairMatchLogic";
+
+export type GameStatus = "playing" | "won" | "lost";
+
+const MAX_TIME = 90; // 90 seconds max
+
+export function useGameSession() {
+  const [score, setScore] = useState(0);
+  const [moves, setMoves] = useState(0);
+  const [combo, setCombo] = useState(0);
+  const [level, setLevel] = useState(1);
+  
+  const getLevelMaxTime = (level: number) => {
+  const { rows, cols } = getBoardSize(level);
+  const pairs = (rows * cols) / 2;
+  // Dynamic time scaling based on number of pairs and level
+  return Math.max(45, Math.floor(pairs * 3) + Math.max(0, 30 - level));
+};
+  
+  const currentMaxTime = getLevelMaxTime(level);
+  
+  const [timeLeft, setTimeLeft] = useState(currentMaxTime);
+  const [status, setStatus] = useState<GameStatus>("playing");
+  const [stats, setStats] = useState<ScoreStats>(() => loadStats());
+
+  const addScore = useCallback((points: number) => {
+    setScore((s) => Math.max(0, s + points));
+  }, []);
+
+  const addMove = useCallback(() => {
+    setMoves((m) => m + 1);
+  }, []);
+
+  const resetCombo = useCallback(() => {
+    setCombo(0);
+  }, []);
+
+  const increaseCombo = useCallback(() => {
+    setCombo((c) => c + 1);
+  }, []);
+
+  const addTime = useCallback((seconds: number) => {
+    setTimeLeft((t) => Math.min(currentMaxTime, t + seconds));
+  }, [currentMaxTime]);
+
+  const tickTime = useCallback((dt: number) => {
+    setTimeLeft((t) => {
+      const next = t - dt;
+      return next > 0 ? next : 0;
+    });
+  }, []);
+
+  const setWon = useCallback(() => {
+    setStatus("won");
+    setStats((prev) => {
+      const updated: ScoreStats = {
+        best: Math.max(prev.best, score),
+        last: score,
+        totalGames: prev.totalGames + 1,
+      };
+      saveStats(updated);
+      return updated;
+    });
+  }, [score]);
+
+  const setLost = useCallback(() => {
+    setStatus("lost");
+    setStats((prev) => {
+      const updated: ScoreStats = {
+        best: Math.max(prev.best, score),
+        last: score,
+        totalGames: prev.totalGames + 1,
+      };
+      saveStats(updated);
+      return updated;
+    });
+  }, [score]);
+
+  const resetSession = useCallback((isNextLevel = false) => {
+    if (!isNextLevel) {
+      setScore(0);
+      setLevel(1);
+    } else {
+      setLevel((l) => l + 1);
+    }
+    setMoves(0);
+    setCombo(0);
+    const nextLevelNum = isNextLevel ? level + 1 : 1;
+    const newMaxTime = getLevelMaxTime(nextLevelNum);
+    setTimeLeft(newMaxTime);
+    setStatus("playing");
+  }, [level]);
+
+  return {
+    score,
+    moves,
+    combo,
+    level,
+    timeLeft,
+    maxTime: currentMaxTime,
+    status,
+    stats,
+    addScore,
+    addMove,
+    resetCombo,
+    increaseCombo,
+    addTime,
+    tickTime,
+    setWon,
+    setLost,
+    resetSession,
+    setStatus,
+  };
+}

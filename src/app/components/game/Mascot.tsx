@@ -1,13 +1,13 @@
 import { palette as c } from "./gameThemes";
 
 interface Props {
-  size?: number;
+  className?: string;
 }
 
 /** Lạc Lạc — the peanut mascot, drawn procedurally per DESIGN.md §5.5. */
-export function Mascot({ size = 72 }: Props) {
+export function Mascot({ className = "w-16 h-16 md:w-20 md:h-20" }: Props) {
   return (
-    <svg width={size} height={size} viewBox="0 0 80 80" fill="none">
+    <svg className={className} viewBox="0 0 80 80" fill="none">
       <defs>
         <radialGradient id="mascotGround" cx="50%" cy="30%" r="80%">
           <stop offset="0%" stopColor={c.bambooSoft} />

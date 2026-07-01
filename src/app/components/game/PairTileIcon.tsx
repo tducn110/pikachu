@@ -3,14 +3,13 @@ import { palette as c } from "./gameThemes";
 
 interface Props {
   kind: TileKind;
-  size?: number;
+  className?: string;
 }
 
 /** Original, procedurally-drawn SVG icons in the warm countryside palette. */
-export function PairTileIcon({ kind, size = 56 }: Props) {
+export function PairTileIcon({ kind, className = "w-full h-full" }: Props) {
   const common = {
-    width: size,
-    height: size,
+    className,
     viewBox: "0 0 64 64",
     fill: "none" as const,
     strokeLinecap: "round" as const,
