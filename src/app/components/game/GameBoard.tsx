@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Application, Container, Graphics, Rectangle, Sprite } from "pixi.js";
 import { getBoardSize, type PairTile, type Point, type TileKind } from "../../utils/pairMatchLogic";
 import { palette as c } from "./gameThemes";
 import { loadPikachuTileAssets, type PikachuTileAssets } from "./pixi/loadPikachuTileAssets";
 import { TILE_ICON_FILL_RATIO } from "./pixi/pikachuTileCatalog";
+import { perfDiagnostics } from "./pixi/pixiPerfDiagnostics";
 
 interface Props {
   tiles: PairTile[];
@@ -45,7 +46,7 @@ const MAX_TILE_VIEWS = 16 * 16;
  * display objects (up to the 16x16 maximum) and pointer hit areas so tile
  * updates do not reconcile DOM.
  */
-export function GameBoard({
+export const GameBoard = memo(function GameBoard({
   tiles,
   selectedIds,
   wrongIds,
@@ -54,6 +55,7 @@ export function GameBoard({
   onSelect,
   level,
 }: Props) {
+  perfDiagnostics.count("react.gameBoardRender");
   const { rows, cols } = getBoardSize(level);
   const hostRef = useRef<HTMLDivElement>(null);
   const onSelectRef = useRef(onSelect);
@@ -82,6 +84,7 @@ export function GameBoard({
     let destroyed = false;
     let drawFrame = 0;
     const app = new Application();
+    perfDiagnostics.count("pixi.applicationCreated");
     const tileLayer = new Container();
     const pathLayer = new Graphics();
     pathLayer.eventMode = "none";
@@ -99,22 +102,26 @@ export function GameBoard({
 
       if (!tileAssets) return;
 
-      const screenWidth = app.screen.width;
-      const screenHeight = app.screen.height;
-      const { rows: currentRows, cols: currentCols } = layoutRef.current;
-      const tileSize = Math.min(screenWidth / currentCols, screenHeight / currentRows);
-      const boardWidth = tileSize * currentCols;
-      const boardHeight = tileSize * currentRows;
-      const originX = (screenWidth - boardWidth) / 2;
-      const originY = (screenHeight - boardHeight) / 2;
-      const state = stateRef.current;
+      const drawStartedAt = perfDiagnostics.start("pixi.board.draw");
+      perfDiagnostics.count("pixi.boardSync");
 
-      if (state.tiles.length > MAX_TILE_VIEWS) {
-        throw new Error(`Pikachu GameBoard received ${state.tiles.length} tiles; pool maximum is ${MAX_TILE_VIEWS}`);
-      }
+      try {
+        const screenWidth = app.screen.width;
+        const screenHeight = app.screen.height;
+        const { rows: currentRows, cols: currentCols } = layoutRef.current;
+        const tileSize = Math.min(screenWidth / currentCols, screenHeight / currentRows);
+        const boardWidth = tileSize * currentCols;
+        const boardHeight = tileSize * currentRows;
+        const originX = (screenWidth - boardWidth) / 2;
+        const originY = (screenHeight - boardHeight) / 2;
+        const state = stateRef.current;
 
-      const poolSize = Math.max(state.tiles.length, tileViews.length);
-      for (let index = 0; index < poolSize; index += 1) {
+        if (state.tiles.length > MAX_TILE_VIEWS) {
+          throw new Error(`Pikachu GameBoard received ${state.tiles.length} tiles; pool maximum is ${MAX_TILE_VIEWS}`);
+        }
+
+        const poolSize = Math.max(state.tiles.length, tileViews.length);
+        for (let index = 0; index < poolSize; index += 1) {
         const tile = state.tiles[index];
         const view = tileViews[index];
         if (!tile) {
@@ -155,6 +162,8 @@ export function GameBoard({
             if (createdView.tileId) onSelectRef.current(createdView.tileId);
           });
           tileLayer.addChild(root);
+          perfDiagnostics.count("pixi.tileViewsCreated");
+          perfDiagnostics.count("pixi.pointerListenersAdded");
           tileViews[index] = createdView;
           currentView = createdView;
         }
@@ -173,6 +182,7 @@ export function GameBoard({
         currentView.tileId = tile.id;
         currentView.root.visible = visible;
         currentView.root.position.set(originX + (tile.col + 0.5) * tileSize, originY + (tile.row + 0.5) * tileSize);
+        perfDiagnostics.count("pixi.positionUpdates");
         currentView.root.scale.set(isSelected ? 1.05 : 1);
         currentView.root.rotation = isWrong ? 0.035 : 0;
         currentView.root.eventMode = visible ? "static" : "none";
@@ -185,6 +195,7 @@ export function GameBoard({
           currentView.lastVisible !== visible
         ) {
           currentView.card.clear();
+          perfDiagnostics.count("pixi.graphicsRedraws");
           currentView.card.roundRect(cardX, cardY, cardSize, cardSize, Math.max(3, tileSize * 0.12));
           currentView.card.fill(toColor(c.creamCard));
           currentView.card.stroke({
@@ -214,6 +225,7 @@ export function GameBoard({
             throw new Error(`No loaded Pikachu texture mapped for tile kind: ${tile.kind}`);
           }
           currentView.icon.texture = texture;
+          perfDiagnostics.count("pixi.textureAssignments");
           currentView.kind = tile.kind;
         }
         if (kindChanged || layoutChanged) {
@@ -224,24 +236,28 @@ export function GameBoard({
         }
       }
 
-      if (
-        lastPath !== state.activePath ||
-        lastPathTileSize !== tileSize ||
-        lastPathOriginX !== originX ||
-        lastPathOriginY !== originY
-      ) {
-        drawPath(pathLayer, state.activePath, originX, originY, tileSize);
-        lastPath = state.activePath;
-        lastPathTileSize = tileSize;
-        lastPathOriginX = originX;
-        lastPathOriginY = originY;
-      }
+        if (
+          lastPath !== state.activePath ||
+          lastPathTileSize !== tileSize ||
+          lastPathOriginX !== originX ||
+          lastPathOriginY !== originY
+        ) {
+          drawPath(pathLayer, state.activePath, originX, originY, tileSize);
+          lastPath = state.activePath;
+          lastPathTileSize = tileSize;
+          lastPathOriginX = originX;
+          lastPathOriginY = originY;
+        }
 
-      app.render();
+        app.render();
+      } finally {
+        perfDiagnostics.end("pixi.board.draw", drawStartedAt);
+      }
     };
 
     const scheduleDraw = () => {
       if (disposed || drawFrame !== 0) return;
+      perfDiagnostics.count("pixi.resizeOrStateRedrawRequests");
       drawFrame = requestAnimationFrame(() => {
         drawFrame = 0;
         drawBoard();
@@ -253,6 +269,7 @@ export function GameBoard({
     const destroyApp = () => {
       if (appInitialized && !destroyed) {
         destroyed = true;
+        perfDiagnostics.count("pixi.applicationDestroyed");
         app.destroy({ removeView: true, releaseGlobalResources: true }, { children: true });
       }
     };
@@ -331,7 +348,7 @@ export function GameBoard({
       )}
     </div>
   );
-}
+});
 
 function drawPath(
   graphics: Graphics,

@@ -14,6 +14,7 @@ import { useGameAudio } from "./useGameAudio";
 import { useGameSession, type GameStatus } from "./useGameSession";
 import { useGameBoard } from "./useGameBoard";
 import { type ScoreStats } from "../utils/stats";
+import { perfDiagnostics } from "../components/game/pixi/pixiPerfDiagnostics";
 
 export interface UsePairMatchGame {
   tiles: PairTile[];
@@ -74,7 +75,9 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
       const a = board.tiles.find((t) => t.id === firstId)!;
       const b = board.tiles.find((t) => t.id === secondId)!;
       const { rows, cols } = getBoardSize(session.level);
-      const path = findPikachuPath(board.tiles, a, b, rows, cols);
+      const path = perfDiagnostics.measure("pikachu.path.find", () =>
+        findPikachuPath(board.tiles, a, b, rows, cols),
+      );
 
       if (path) {
         board.setActivePath(path);
@@ -113,7 +116,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
         }, 700);
       }
     },
-    [board, session, audio, isPaused]
+    [board.tiles, board.selectedIds, session.status, session.level, session.combo, audio.sfx, isPaused]
   );
 
   // Detect win or reshuffle
@@ -134,7 +137,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
         }
       }
     }
-  }, [board.tiles, session.status, session.setWon, board.shuffleIfNoMatch, audio]);
+  }, [board.tiles, session.status, session.setWon, board.shuffleIfNoMatch, audio.sfx]);
 
   // Timer loop
   useEffect(() => {
@@ -151,7 +154,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
       session.setLost();
       audio.sfx("wrong"); // Maybe add a game-over sound instead if available, 'wrong' works for now
     }
-  }, [session.timeLeft, session.status, session.setLost, audio]);
+  }, [session.timeLeft, session.status, session.setLost, audio.sfx]);
 
   const resetGame = useCallback(() => {
     runIdRef.current += 1;
@@ -161,7 +164,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     board.resetBoard(1);
     session.resetSession(false);
     audio.sfx("reset");
-  }, [board, session, audio]);
+  }, [board.resetBoard, session.resetSession, audio.sfx]);
 
   const nextLevel = useCallback(() => {
     runIdRef.current += 1;
@@ -171,10 +174,12 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     board.resetBoard(session.level + 1);
     session.resetSession(true);
     audio.sfx("reset");
-  }, [board, session, audio]);
+  }, [board.resetBoard, session.level, session.resetSession, audio.sfx]);
 
   const hintPair = useCallback(() => {
     if (session.status !== "playing" || lockRef.current || isPaused) return;
+    perfDiagnostics.count("pikachu.hint.calls");
+    const scanStartedAt = perfDiagnostics.start("pikachu.hint.scan");
     const visible = board.tiles.filter((t) => !t.removed);
     const { rows, cols } = getBoardSize(session.level);
     const occupancy = buildBoardOccupancy(board.tiles, rows, cols);
@@ -185,33 +190,37 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
           session.addScore(-50); // Penalty for hint
           audio.sfx("tap");
           setTimeout(() => board.setHintIds([]), 1200);
+          perfDiagnostics.end("pikachu.hint.scan", scanStartedAt);
           return;
         }
       }
     }
-  }, [board, session, audio, isPaused]);
+    perfDiagnostics.end("pikachu.hint.scan", scanStartedAt);
+  }, [board.tiles, board.setHintIds, session.status, session.level, session.addScore, audio.sfx, isPaused]);
 
   const shuffleBoard = useCallback(() => {
     if (session.status !== "playing" || lockRef.current || isPaused) return;
+    perfDiagnostics.count("pikachu.shuffle.calls");
     const { rows, cols } = getBoardSize(session.level);
     lockRef.current = true;
     board.setSelectedIds([]);
     board.setWrongIds([]);
     board.setHintIds([]);
     board.setActivePath(null);
-    board.setTiles((prev) => {
+    board.setTiles((prev) => perfDiagnostics.measure("pikachu.shuffle.validation", () => {
       let nextBoard = shuffleRemaining(prev);
       let attempts = 0;
       while (!hasAnyMatch(nextBoard, rows, cols) && attempts < 50) {
         nextBoard = shuffleRemaining(nextBoard);
         attempts += 1;
       }
+      perfDiagnostics.count("pikachu.shuffle.validationAttempts", attempts + 1);
       return nextBoard;
-    });
+    }));
     session.addMove();
     audio.sfx("reset");
     lockRef.current = false;
-  }, [board, session, audio, isPaused]);
+  }, [board.setSelectedIds, board.setWrongIds, board.setHintIds, board.setActivePath, board.setTiles, session.status, session.level, session.addMove, audio.sfx, isPaused]);
 
   return {
     tiles: board.tiles,

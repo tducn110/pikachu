@@ -10,6 +10,7 @@ import {
   type PairTile,
   type Point,
 } from "../utils/pairMatchLogic";
+import { perfDiagnostics } from "../components/game/pixi/pixiPerfDiagnostics";
 
 export function useGameBoard(initialLevel: number = 1) {
   const [tiles, setTiles] = useState<PairTile[]>(() => createPairBoard(initialLevel));
@@ -34,23 +35,32 @@ export function useGameBoard(initialLevel: number = 1) {
   }, []);
 
   const shuffleIfNoMatch = useCallback((rows: number, cols: number) => {
+    perfDiagnostics.count("pikachu.autoShuffleChecks");
+    if (isBoardCleared(tiles) || hasAnyMatch(tiles, rows, cols)) {
+      return false;
+    }
+
     let changed = false;
     setTiles((prev) => {
-      if (isBoardCleared(prev) || hasAnyMatch(prev, rows, cols)) {
-        return prev;
-      }
-      
-      let nextBoard = shuffleRemaining(prev);
-      changed = true;
-      let attempts = 0;
-      while (!hasAnyMatch(nextBoard, rows, cols) && attempts < 50) {
-        nextBoard = shuffleRemaining(nextBoard);
-        attempts++;
-      }
-      return nextBoard;
+      return perfDiagnostics.measure("pikachu.autoShuffleCheck", () => {
+        if (prev !== tiles && (isBoardCleared(prev) || hasAnyMatch(prev, rows, cols))) {
+          return prev;
+        }
+
+        let nextBoard = shuffleRemaining(prev);
+        changed = true;
+        let attempts = 0;
+        while (!hasAnyMatch(nextBoard, rows, cols) && attempts < 50) {
+          nextBoard = shuffleRemaining(nextBoard);
+          attempts++;
+        }
+        perfDiagnostics.count("pikachu.autoShuffleAttempts", attempts + 1);
+        return nextBoard;
+      });
     });
+    changed = true;
     return changed;
-  }, []);
+  }, [tiles]);
 
   return {
     tiles,
