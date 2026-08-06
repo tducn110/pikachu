@@ -1,12 +1,9 @@
 import { Game } from "./components/game/Game";
-import { Dashboard } from "./components/dashboard/Dashboard";
-import { MainLayout } from "./components/layout/MainLayout";
 
 export default function App() {
   return (
-    <MainLayout>
+    <div className="h-[100dvh] overflow-hidden bg-[#eef7ff] text-[#18324f]">
       <Game />
-      <Dashboard />
-    </MainLayout>
+    </div>
   );
 }

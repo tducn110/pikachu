@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   createPairBoard,
   canMatch,
+  getBoardSize,
   removeMatchedPair,
   getRemainingPairs,
   isBoardCleared,
@@ -10,21 +11,25 @@ import {
 } from "./pairMatchLogic";
 
 describe("pairMatchLogic", () => {
-  it("board has 16 tiles", () => {
-    expect(createPairBoard(1)).toHaveLength(16);
+  it("progresses through even square board sizes", () => {
+    expect([1, 2, 3, 4, 5, 6].map((level) => getBoardSize(level).rows)).toEqual([8, 10, 12, 14, 16, 16]);
   });
 
-  it("board has exactly 8 pairs", () => {
-    expect(getRemainingPairs(createPairBoard(1))).toBe(8);
+  it("level one starts with a readable 8x8 board", () => {
+    expect(createPairBoard(1)).toHaveLength(64);
   });
 
-  it("each kind appears exactly twice", () => {
+  it("level one has exactly 32 pairs", () => {
+    expect(getRemainingPairs(createPairBoard(1))).toBe(32);
+  });
+
+  it("level one keeps every generated kind in complete pairs", () => {
     const counts = new Map<TileKind, number>();
     for (const tile of createPairBoard(1)) {
       counts.set(tile.kind, (counts.get(tile.kind) ?? 0) + 1);
     }
     for (const count of counts.values()) {
-      expect(count).toBe(2);
+      expect(count % 2).toBe(0);
     }
   });
 
@@ -63,10 +68,10 @@ describe("pairMatchLogic", () => {
 
   it("remaining pair count works", () => {
     let tiles = createPairBoard(1);
-    expect(getRemainingPairs(tiles)).toBe(8);
+    expect(getRemainingPairs(tiles)).toBe(32);
     const [a, b] = tiles.filter((t) => t.kind === tiles[0].kind);
     tiles = removeMatchedPair(tiles, a.id, b.id);
-    expect(getRemainingPairs(tiles)).toBe(7);
+    expect(getRemainingPairs(tiles)).toBe(31);
   });
 
   it("board cleared detection works", () => {

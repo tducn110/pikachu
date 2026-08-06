@@ -2,19 +2,19 @@ import type { TileKind } from "../../utils/pairMatchLogic";
 
 /** Bộ Lạc Đậu Phộng palette (from DESIGN.md). */
 export const palette = {
-  ricePaper: "#f5ecd7",
-  paperWarm: "#efe3c4",
-  inkDark: "#2a2418",
-  mascotYellow: "#f0b840",
-  orangeCta: "#e87432",
-  orangeCtaEdge: "#b85a22",
-  bambooGreen: "#6b8e3d",
-  leafDeep: "#4c6630",
-  bambooSoft: "#c8d68a",
-  earthBrown: "#8e4e22",
-  pencilGray: "#8a7d65",
-  creamCard: "#fdf6ea",
-  alertRed: "#c23838",
+  ricePaper: "#f4f9ff",
+  paperWarm: "#e6f1ff",
+  inkDark: "#18324f",
+  mascotYellow: "#ffc928",
+  orangeCta: "#ff8c2f",
+  orangeCtaEdge: "#e56d12",
+  bambooGreen: "#25a56a",
+  leafDeep: "#14704b",
+  bambooSoft: "#b8efcf",
+  earthBrown: "#805020",
+  pencilGray: "#69819b",
+  creamCard: "#ffffff",
+  alertRed: "#e24848",
 } as const;
 
 export const KIND_LABELS: Record<TileKind, string> = {

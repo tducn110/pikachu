@@ -18,14 +18,14 @@ export function WinOverlay({
       role="dialog"
       aria-modal="true"
       aria-label="Chiến thắng"
-      className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl text-center z-40 bg-[#2a2418]/55 backdrop-blur-[12px] animate-[bolac-fade_0.25s]"
+      className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-3 rounded-2xl bg-[#18324f]/35 text-center backdrop-blur-[12px] animate-[bolac-fade_0.25s]"
     >
-      <div className="w-[85%] max-w-sm rounded-3xl px-6 py-8 bg-[#fdf6ea] border-2 border-[#f7b731] shadow-[0_14px_40px_rgba(42,36,24,0.3)] flex flex-col items-center">
+      <div className="flex w-[85%] max-w-sm flex-col items-center rounded-3xl border-2 border-[#ffcf45] bg-white px-6 py-8 shadow-[0_14px_40px_rgba(51,104,145,0.24)]">
         <Mascot className="w-16 h-16 md:w-20 md:h-20" />
-        <h2 className="text-2xl md:text-3xl font-extrabold mt-4 text-[#2a2418]">
+        <h2 className="mt-4 text-2xl font-black text-[#18324f] md:text-3xl">
           Ghép xong rồi!
         </h2>
-        <p className="text-[#8a7d65] mt-1 text-sm md:text-base">
+        <p className="mt-1 text-sm text-[#69819b] md:text-base">
           Bạn đã tìm hết các cặp
         </p>
         <div className="mt-3 text-lg md:text-xl font-bold text-[#e87432]">

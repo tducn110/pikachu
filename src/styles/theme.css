@@ -2,8 +2,8 @@
 
 :root {
   --font-size: 16px;
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
+  --background: #eef7ff;
+  --foreground: #18324f;
   --card: #ffffff;
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -39,6 +39,65 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+}
+
+@keyframes bolac-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.game-board-frame {
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 0;
+  width: min(100%, calc(100dvh - 5rem));
+}
+
+.game-mobile-inline-stat {
+  display: none;
+}
+
+/* Keep the mobile control rail beside the board in landscape so it does not
+ * consume the vertical space needed by the larger early-level tiles. */
+@media (orientation: landscape) and (max-width: 1023px) {
+  .game-mobile-header {
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 0.72fr);
+    grid-template-rows: auto auto;
+    column-gap: 0.5rem;
+    align-items: center;
+  }
+
+  .game-mobile-top {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .game-mobile-progress {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .game-mobile-actions {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: stretch;
+  }
+
+  .game-mobile-actions > button {
+    min-height: 3rem;
+  }
+
+  .game-mobile-stats {
+    display: none;
+  }
+
+  .game-mobile-inline-stat {
+    display: inline;
+  }
+
+  .game-board-frame {
+    width: min(64vh, 100%);
+  }
 }
 
 .dark {
@@ -126,6 +185,13 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
   }
 
   /**

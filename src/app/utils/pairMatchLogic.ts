@@ -17,13 +17,10 @@ export interface PairTile {
 }
 
 export function getBoardSize(level: number) {
-  if (level <= 2) return { rows: 4, cols: 4 };
-  if (level <= 5) return { rows: 4, cols: 6 };
-  if (level <= 10) return { rows: 4, cols: 8 };
-  if (level <= 15) return { rows: 6, cols: 8 };
-  if (level <= 25) return { rows: 6, cols: 10 };
-  if (level <= 35) return { rows: 6, cols: 12 };
-  return { rows: 8, cols: 12 }; // Max size
+  // Keep every board even so the catalog can always be split into pairs.
+  // 16x16 is reserved for the final challenge instead of being the default.
+  const size = [8, 10, 12, 14, 16][Math.min(Math.max(level, 1), 5) - 1];
+  return { rows: size, cols: size };
 }
 
 const TILE_KINDS: TileKind[] = [
@@ -83,16 +80,31 @@ export function createPairBoard(level: number, seed?: number): PairTile[] {
 
 export interface Point { r: number; c: number; }
 
-export function findPikachuPath(tiles: PairTile[], a: PairTile, b: PairTile, rows: number, cols: number): Point[] | null {
+export function buildBoardOccupancy(tiles: PairTile[], rows: number, cols: number): Uint8Array {
+  const occupancy = new Uint8Array(rows * cols);
+  for (const tile of tiles) {
+    if (!tile.removed) occupancy[tile.row * cols + tile.col] = 1;
+  }
+  return occupancy;
+}
+
+export function findPikachuPath(
+  tiles: PairTile[],
+  a: PairTile,
+  b: PairTile,
+  rows: number,
+  cols: number,
+  occupancy?: Uint8Array,
+): Point[] | null {
   if (a.kind !== b.kind || a.id === b.id) return null;
+  const boardOccupancy = occupancy ?? buildBoardOccupancy(tiles, rows, cols);
 
   const isEmptyNode = (r: number, c: number) => {
     if (r === a.row && c === a.col) return true;
     if (r === b.row && c === b.col) return true;
     if (r < -1 || r > rows || c < -1 || c > cols) return false;
     if (r === -1 || r === rows || c === -1 || c === cols) return true;
-    const activeTile = tiles.find(tile => tile.row === r && tile.col === c && !tile.removed);
-    return !activeTile;
+    return boardOccupancy[r * cols + c] === 0;
   };
 
   const checkLine = (p1: Point, p2: Point) => {
@@ -162,10 +174,17 @@ export function findPikachuPath(tiles: PairTile[], a: PairTile, b: PairTile, row
   return null;
 }
 
-export function canMatch(tiles: PairTile[], a: PairTile, b: PairTile, rows: number, cols: number): boolean {
+export function canMatch(
+  tiles: PairTile[],
+  a: PairTile,
+  b: PairTile,
+  rows: number,
+  cols: number,
+  occupancy?: Uint8Array,
+): boolean {
   if (a.id === b.id) return false;
   if (a.removed || b.removed) return false;
-  return findPikachuPath(tiles, a, b, rows, cols) !== null;
+  return findPikachuPath(tiles, a, b, rows, cols, occupancy) !== null;
 }
 
 export function removeMatchedPair(
@@ -190,9 +209,10 @@ export function isBoardCleared(tiles: PairTile[]): boolean {
 
 export function hasAnyMatch(tiles: PairTile[], rows: number, cols: number): boolean {
   const visible = tiles.filter((t) => !t.removed);
+  const occupancy = buildBoardOccupancy(tiles, rows, cols);
   for (let i = 0; i < visible.length; i++) {
     for (let j = i + 1; j < visible.length; j++) {
-      if (canMatch(tiles, visible[i], visible[j], rows, cols)) {
+      if (canMatch(tiles, visible[i], visible[j], rows, cols, occupancy)) {
         return true;
       }
     }

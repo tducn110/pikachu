@@ -8,12 +8,12 @@ interface StatProps {
 
 function Stat({ label, value, accent = c.inkDark }: StatProps) {
   return (
-    <div className="flex-1 rounded-2xl px-2 md:px-3 py-2 text-center bg-white/85 border-[1.5px] border-[#8a7d65]/30">
-      <div className="text-[9px] md:text-[11px] font-bold tracking-widest uppercase text-[#8a7d65]">
+    <div className="min-w-0 flex-1 rounded-xl border border-[#e4dccb] bg-white/60 px-2 py-2 text-center md:px-3">
+      <div className="truncate text-[9px] font-bold uppercase tracking-widest text-[#69819b] md:text-[10px]">
         {label}
       </div>
       <div 
-        className="text-lg md:text-2xl font-extrabold leading-tight"
+        className="text-base font-black leading-tight md:text-2xl"
         style={{ color: accent }}
       >
         {value}
@@ -37,21 +37,21 @@ export function GameHUD({ score, level, moves, remainingPairs, combo, timeLeft, 
   const isDanger = timePct < 25;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2.5">
       {/* Time Bar */}
       <div 
-        className="w-full h-3 rounded-full bg-white/50 border border-[#8a7d65]/30 overflow-hidden"
+        className="h-2.5 w-full overflow-hidden rounded-full border border-[#e0d7c7] bg-[#f0eadf]"
       >
         <div 
           className="h-full transition-all duration-300"
           style={{ 
             width: `${timePct}%`,
-            backgroundColor: isDanger ? c.alertRed : c.bambooGreen,
+            backgroundColor: isDanger ? c.alertRed : c.orangeCta,
           }}
         />
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-1.5 md:gap-2">
         <Stat label="Cấp độ" value={level} accent={c.mascotYellow} />
         <Stat label="Điểm" value={score} accent={c.orangeCta} />
         <Stat label="Cặp" value={remainingPairs} accent={c.bambooGreen} />

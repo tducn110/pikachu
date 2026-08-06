@@ -1,0 +1,215 @@
+{
+  "result": "PASS",
+  "checks": {
+    "all_square_512": true,
+    "all_rgba": true,
+    "all_have_transparency": true,
+    "no_overflow": true,
+    "consistent_names": true,
+    "corrected_troll_smile": true,
+    "preserved_aspect_ratio": true,
+    "no_blue_frame_embedded": true
+  },
+  "assets": [
+    {
+      "id": 1,
+      "name": "troll",
+      "size": "512x512",
+      "mode": "RGBA",
+      "transparent_background": true,
+      "opaque_pixels_percent": 29.71,
+      "nontransparent_bbox": [
+        48,
+        54,
+        464,
+        484
+      ],
+      "left_padding": 48,
+      "right_padding": 48,
+      "top_padding": 54,
+      "bottom_padding": 28,
+      "overflow": false,
+      "sha256": "94f3ca3b31f65fbc96fb2877a528a539d9330743d40514832542a55ae5f5aa95"
+    },
+    {
+      "id": 2,
+      "name": "worried_panda",
+      "size": "512x512",
+      "mode": "RGBA",
+      "transparent_background": true,
+      "opaque_pixels_percent": 39.37,
+      "nontransparent_bbox": [
+        70,
+        54,
+        441,
+        484
+      ],
+      "left_padding": 70,
+      "right_padding": 71,
+      "top_padding": 54,
+      "bottom_padding": 28,
+      "overflow": false,
+      "sha256": "871cb455940f47b0e68222563fbeaee5d4d735e17d836569994005980f005db4"
+    },
+    {
+      "id": 3,
+      "name": "boxing_fox",
+      "size": "512x512",
+      "mode": "RGBA",
+      "transparent_background": true,
+      "opaque_pixels_percent": 37.16,
+      "nontransparent_bbox": [
+        53,
+        54,
+        459,
+        484
+      ],
+      "left_padding": 53,
+      "right_padding": 53,
+      "top_padding": 54,
+      "bottom_padding": 28,
+      "overflow": false,
+      "sha256": "51bd9dcf71ab87a1dc5c7caf3f467dd31bd43f9aa8dfa9e05080d31daa697d00"
+    },
+    {
+      "id": 4,
+      "name": "angry_rabbit",
+      "size": "512x512",
+      "mode": "RGBA",
+      "transparent_background": true,
+      "opaque_pixels_percent": 22.17,
+      "nontransparent_bbox": [
+        113,
+        54,
+        399,
+        484
+      ],
+      "left_padding": 113,
+      "right_padding": 113,
+      "top_padding": 54,
+      "bottom_padding": 28,
+      "overflow": false,
+      "sha256": "3e87ca126ced1c12edb2bbbfa873dbb1a0b385659213947d370294fdcfb2fe92"
+    },
+    {
+      "id": 5,
+      "name": "sleepy_bear_ball",
+      "size": "512x512",
+      "mode": "RGBA",
+      "transparent_background": true,
+      "opaque_pixels_percent": 36.47,
+      "nontransparent_bbox": [
+        45,
+        54,
+        466,
+        484
+      ],
+      "left_padding": 45,
+      "right_padding": 46,
+      "top_padding": 54,
+      "bottom_padding": 28,
+      "overflow": false,
+      "sha256": "d7e07129ca925491f65c0688946c33e47632d5c13f54c179163ee415b8075a5c"
+    },
+    {
+      "id": 6,
+      "name": "smug_brown_bear",
+      "size": "512x512",
+      "mode": "RGBA",
+      "transparent_background": true,
+      "opaque_pixels_percent": 39.54,
+      "nontransparent_bbox": [
+        66,
+        54,
+        446,
+        484
+      ],
+      "left_padding": 66,
+      "right_padding": 66,
+      "top_padding": 54,
+      "bottom_padding": 28,
+      "overflow": false,
+      "sha256": "5707d35b72af3fbcedf5812bea5ed2ff10e126977d3612f2fd84e9a51431c043"
+    },
+    {
+      "id": 7,
+      "name": "goofy_tiger",
+      "size": "512x512",
+      "mode": "RGBA",
+      "transparent_background": true,
+      "opaque_pixels_percent": 30.16,
+      "nontransparent_bbox": [
+        79,
+        54,
+        432,
+        484
+      ],
+      "left_padding": 79,
+      "right_padding": 80,
+      "top_padding": 54,
+      "bottom_padding": 28,
+      "overflow": false,
+      "sha256": "d941849184996f18f741792b7579255203d716212ae3104859334b80c4170b06"
+    },
+    {
+      "id": 8,
+      "name": "green_gift_mascot",
+      "size": "512x512",
+      "mode": "RGBA",
+      "transparent_background": true,
+      "opaque_pixels_percent": 51.0,
+      "nontransparent_bbox": [
+        41,
+        71,
+        471,
+        484
+      ],
+      "left_padding": 41,
+      "right_padding": 41,
+      "top_padding": 71,
+      "bottom_padding": 28,
+      "overflow": false,
+      "sha256": "a21199379253bc87f5441456780bf0265d2445751d3b872309dcd3b1241537f4"
+    },
+    {
+      "id": 9,
+      "name": "lion_dance",
+      "size": "512x512",
+      "mode": "RGBA",
+      "transparent_background": true,
+      "opaque_pixels_percent": 35.98,
+      "nontransparent_bbox": [
+        66,
+        54,
+        446,
+        484
+      ],
+      "left_padding": 66,
+      "right_padding": 66,
+      "top_padding": 54,
+      "bottom_padding": 28,
+      "overflow": false,
+      "sha256": "2e2bdd56544fc2a4893b7dbb6d0d6a140a86861e6ca80ae6c44f74c82e663781"
+    },
+    {
+      "id": 10,
+      "name": "goofy_yellow_dragon",
+      "size": "512x512",
+      "mode": "RGBA",
+      "transparent_background": true,
+      "opaque_pixels_percent": 17.57,
+      "nontransparent_bbox": [
+        84,
+        54,
+        427,
+        484
+      ],
+      "left_padding": 84,
+      "right_padding": 85,
+      "top_padding": 54,
+      "bottom_padding": 28,
+      "overflow": false,
+      "sha256": "7b9fb3c46118e451ad1e8be9120a2965d8e15669ff026692a79a01e91424c136"
+    }
+  ]
+}

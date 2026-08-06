@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { findPikachuPath, isBoardCleared, getRemainingPairs, getBoardSize, type PairTile, type Point } from "../utils/pairMatchLogic";
+import {
+  findPikachuPath,
+  getBoardSize,
+  getRemainingPairs,
+  hasAnyMatch,
+  isBoardCleared,
+  shuffleRemaining,
+  buildBoardOccupancy,
+  type PairTile,
+  type Point,
+} from "../utils/pairMatchLogic";
 import { useGameAudio } from "./useGameAudio";
 import { useGameSession, type GameStatus } from "./useGameSession";
 import { useGameBoard } from "./useGameBoard";
@@ -30,6 +40,7 @@ export interface UsePairMatchGame {
   resetGame: () => void;
   nextLevel: () => void;
   hintPair: () => void;
+  shuffleBoard: () => void;
 }
 
 export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = {}): UsePairMatchGame {
@@ -165,10 +176,11 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
   const hintPair = useCallback(() => {
     if (session.status !== "playing" || lockRef.current || isPaused) return;
     const visible = board.tiles.filter((t) => !t.removed);
+    const { rows, cols } = getBoardSize(session.level);
+    const occupancy = buildBoardOccupancy(board.tiles, rows, cols);
     for (let i = 0; i < visible.length; i++) {
       for (let j = i + 1; j < visible.length; j++) {
-        const { rows, cols } = getBoardSize(session.level);
-        if (findPikachuPath(board.tiles, visible[i], visible[j], rows, cols)) {
+        if (findPikachuPath(board.tiles, visible[i], visible[j], rows, cols, occupancy)) {
           board.setHintIds([visible[i].id, visible[j].id]);
           session.addScore(-50); // Penalty for hint
           audio.sfx("tap");
@@ -177,6 +189,28 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
         }
       }
     }
+  }, [board, session, audio, isPaused]);
+
+  const shuffleBoard = useCallback(() => {
+    if (session.status !== "playing" || lockRef.current || isPaused) return;
+    const { rows, cols } = getBoardSize(session.level);
+    lockRef.current = true;
+    board.setSelectedIds([]);
+    board.setWrongIds([]);
+    board.setHintIds([]);
+    board.setActivePath(null);
+    board.setTiles((prev) => {
+      let nextBoard = shuffleRemaining(prev);
+      let attempts = 0;
+      while (!hasAnyMatch(nextBoard, rows, cols) && attempts < 50) {
+        nextBoard = shuffleRemaining(nextBoard);
+        attempts += 1;
+      }
+      return nextBoard;
+    });
+    session.addMove();
+    audio.sfx("reset");
+    lockRef.current = false;
   }, [board, session, audio, isPaused]);
 
   return {
@@ -204,5 +238,6 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     resetGame,
     nextLevel,
     hintPair,
+    shuffleBoard,
   };
 }
