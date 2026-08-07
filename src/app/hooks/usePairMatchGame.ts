@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  findPikachuPath,
+  evaluatePairMatch,
+  findAvailableMatch,
   getBoardSize,
   getRemainingPairs,
   hasAnyMatch,
   isBoardCleared,
   shuffleRemaining,
-  buildBoardOccupancy,
   type PairTile,
   type Point,
 } from "../utils/pairMatchLogic";
@@ -20,7 +20,7 @@ export interface UsePairMatchGame {
   tiles: PairTile[];
   selectedIds: string[];
   wrongIds: string[];
-  wrongReason: "kind" | null;
+  wrongReason: "different-kind" | "blocked-path" | null;
   hintIds: string[];
   activePath: Point[] | null;
   shuffleNotice: boolean;
@@ -42,6 +42,7 @@ export interface UsePairMatchGame {
   nextLevel: () => void;
   hintPair: () => void;
   shuffleBoard: () => void;
+  bombPair: () => void;
 }
 
 export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = {}): UsePairMatchGame {
@@ -49,10 +50,33 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
   const session = useGameSession();
   const board = useGameBoard();
   const [shuffleNotice, setShuffleNotice] = useState(false);
+  const [wrongReason, setWrongReason] = useState<"different-kind" | "blocked-path" | null>(null);
 
   const lockRef = useRef(false);
   const wonRef = useRef(false);
   const runIdRef = useRef(0);
+  const timeoutIdsRef = useRef(new Set<ReturnType<typeof setTimeout>>());
+
+  const scheduleForCurrentRun = useCallback((callback: () => void, delay: number) => {
+    const runId = runIdRef.current;
+    const timeoutId = setTimeout(() => {
+      timeoutIdsRef.current.delete(timeoutId);
+      if (runIdRef.current === runId) callback();
+    }, delay);
+    timeoutIdsRef.current.add(timeoutId);
+  }, []);
+
+  const invalidateRun = useCallback(() => {
+    runIdRef.current += 1;
+    for (const timeoutId of timeoutIdsRef.current) clearTimeout(timeoutId);
+    timeoutIdsRef.current.clear();
+    lockRef.current = false;
+  }, []);
+
+  useEffect(() => () => {
+    for (const timeoutId of timeoutIdsRef.current) clearTimeout(timeoutId);
+    timeoutIdsRef.current.clear();
+  }, []);
 
   const remainingPairs = getRemainingPairs(board.tiles);
 
@@ -75,18 +99,15 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
       const a = board.tiles.find((t) => t.id === firstId)!;
       const b = board.tiles.find((t) => t.id === secondId)!;
       const { rows, cols } = getBoardSize(session.level);
-      const path = perfDiagnostics.measure("pikachu.path.find", () =>
-        findPikachuPath(board.tiles, a, b, rows, cols),
+      const result = perfDiagnostics.measure("pikachu.path.find", () =>
+        evaluatePairMatch(board.tiles, a, b, rows, cols),
       );
 
-      if (path) {
-        board.setActivePath(path);
+      if (result.reason === "match") {
+        board.setActivePath(result.path);
         lockRef.current = true;
         audio.sfx("match");
-        const currentRun = runIdRef.current;
-        setTimeout(() => {
-          if (runIdRef.current !== currentRun) return;
-          
+        scheduleForCurrentRun(() => {
           session.increaseCombo();
           const newCombo = session.combo + 1;
           session.addScore(100 + 20 * (newCombo - 1));
@@ -97,26 +118,24 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
           board.setActivePath(null);
           lockRef.current = false;
 
-          // Checking win via useEffect is better, but we can play sound here
-          // Wait, isBoardCleared requires nextTiles. It's handled in useEffect.
         }, 400);
       } else {
         audio.sfx("wrong");
         lockRef.current = true;
         board.setWrongIds([firstId, secondId]);
+        setWrongReason(result.reason === "different-kind" ? "different-kind" : "blocked-path");
         session.addMove();
         session.resetCombo();
-        
-        const currentRun = runIdRef.current;
-        setTimeout(() => {
-          if (runIdRef.current !== currentRun) return;
+
+        scheduleForCurrentRun(() => {
           board.setWrongIds([]);
+          setWrongReason(null);
           board.setSelectedIds([]);
           lockRef.current = false;
         }, 700);
       }
     },
-    [board.tiles, board.selectedIds, session.status, session.level, session.combo, audio.sfx, isPaused]
+    [board.tiles, board.selectedIds, board.setActivePath, board.setHintIds, board.setSelectedIds, board.setWrongIds, board.removePair, session.status, session.level, session.combo, session.addMove, session.addScore, session.addTime, session.increaseCombo, session.resetCombo, audio.sfx, isPaused, scheduleForCurrentRun]
   );
 
   // Detect win or reshuffle
@@ -133,11 +152,11 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
         if (boardChanged) {
           setShuffleNotice(true);
           audio.sfx("reset"); // play a sound for reshuffle
-          setTimeout(() => setShuffleNotice(false), 2000);
+          scheduleForCurrentRun(() => setShuffleNotice(false), 2000);
         }
       }
     }
-  }, [board.tiles, session.status, session.setWon, board.shuffleIfNoMatch, audio.sfx]);
+  }, [board.tiles, session.status, session.setWon, board.shuffleIfNoMatch, audio.sfx, scheduleForCurrentRun]);
 
   // Timer loop
   useEffect(() => {
@@ -157,46 +176,41 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
   }, [session.timeLeft, session.status, session.setLost, audio.sfx]);
 
   const resetGame = useCallback(() => {
-    runIdRef.current += 1;
-    lockRef.current = false;
+    invalidateRun();
     wonRef.current = false;
-    
+    setWrongReason(null);
+    setShuffleNotice(false);
     board.resetBoard(1);
     session.resetSession(false);
     audio.sfx("reset");
-  }, [board.resetBoard, session.resetSession, audio.sfx]);
+  }, [invalidateRun, board.resetBoard, session.resetSession, audio.sfx]);
 
   const nextLevel = useCallback(() => {
-    runIdRef.current += 1;
-    lockRef.current = false;
+    invalidateRun();
     wonRef.current = false;
-    
+    setWrongReason(null);
+    setShuffleNotice(false);
     board.resetBoard(session.level + 1);
     session.resetSession(true);
     audio.sfx("reset");
-  }, [board.resetBoard, session.level, session.resetSession, audio.sfx]);
+  }, [invalidateRun, board.resetBoard, session.level, session.resetSession, audio.sfx]);
 
   const hintPair = useCallback(() => {
     if (session.status !== "playing" || lockRef.current || isPaused) return;
     perfDiagnostics.count("pikachu.hint.calls");
     const scanStartedAt = perfDiagnostics.start("pikachu.hint.scan");
-    const visible = board.tiles.filter((t) => !t.removed);
     const { rows, cols } = getBoardSize(session.level);
-    const occupancy = buildBoardOccupancy(board.tiles, rows, cols);
-    for (let i = 0; i < visible.length; i++) {
-      for (let j = i + 1; j < visible.length; j++) {
-        if (findPikachuPath(board.tiles, visible[i], visible[j], rows, cols, occupancy)) {
-          board.setHintIds([visible[i].id, visible[j].id]);
-          session.addScore(-50); // Penalty for hint
-          audio.sfx("tap");
-          setTimeout(() => board.setHintIds([]), 1200);
-          perfDiagnostics.end("pikachu.hint.scan", scanStartedAt);
-          return;
-        }
-      }
+    const match = findAvailableMatch(board.tiles, rows, cols);
+    if (match) {
+      board.setHintIds([match.first.id, match.second.id]);
+      session.addScore(-50); // Penalty for hint
+      audio.sfx("tap");
+      scheduleForCurrentRun(() => board.setHintIds([]), 1200);
+      perfDiagnostics.end("pikachu.hint.scan", scanStartedAt);
+      return;
     }
     perfDiagnostics.end("pikachu.hint.scan", scanStartedAt);
-  }, [board.tiles, board.setHintIds, session.status, session.level, session.addScore, audio.sfx, isPaused]);
+  }, [board.tiles, board.setHintIds, session.status, session.level, session.addScore, audio.sfx, isPaused, scheduleForCurrentRun]);
 
   const shuffleBoard = useCallback(() => {
     if (session.status !== "playing" || lockRef.current || isPaused) return;
@@ -207,6 +221,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     board.setWrongIds([]);
     board.setHintIds([]);
     board.setActivePath(null);
+    setWrongReason(null);
     board.setTiles((prev) => perfDiagnostics.measure("pikachu.shuffle.validation", () => {
       let nextBoard = shuffleRemaining(prev);
       let attempts = 0;
@@ -222,11 +237,33 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     lockRef.current = false;
   }, [board.setSelectedIds, board.setWrongIds, board.setHintIds, board.setActivePath, board.setTiles, session.status, session.level, session.addMove, audio.sfx, isPaused]);
 
+  const bombPair = useCallback(() => {
+    if (session.status !== "playing" || lockRef.current || isPaused) return;
+    const { rows, cols } = getBoardSize(session.level);
+    const match = findAvailableMatch(board.tiles, rows, cols);
+    if (!match) return;
+
+    lockRef.current = true;
+    board.setSelectedIds([]);
+    board.setWrongIds([]);
+    board.setHintIds([]);
+    board.setActivePath(match.path);
+    setWrongReason(null);
+    session.addMove();
+    audio.sfx("match");
+
+    scheduleForCurrentRun(() => {
+      board.removePair(match.first.id, match.second.id, session.level, rows, cols);
+      board.setActivePath(null);
+      lockRef.current = false;
+    }, 400);
+  }, [board.tiles, board.setSelectedIds, board.setWrongIds, board.setHintIds, board.setActivePath, board.removePair, session.status, session.level, session.addMove, audio.sfx, isPaused, scheduleForCurrentRun]);
+
   return {
     tiles: board.tiles,
     selectedIds: board.selectedIds,
     wrongIds: board.wrongIds,
-    wrongReason: null,
+    wrongReason,
     hintIds: board.hintIds,
     activePath: board.activePath,
     shuffleNotice,
@@ -248,5 +285,6 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     nextLevel,
     hintPair,
     shuffleBoard,
+    bombPair,
   };
 }

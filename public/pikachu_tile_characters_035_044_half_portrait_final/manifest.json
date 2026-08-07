@@ -1,0 +1,269 @@
+{
+  "package_name": "pikachu_tile_characters_035_044_half_portrait_final",
+  "asset_type": "tile-character-portraits",
+  "style": "upper-half portrait crop for tile usage",
+  "canvas_sizes": {
+    "master": [
+      512,
+      512
+    ],
+    "runtime": [
+      256,
+      256
+    ]
+  },
+  "transparent_background": true,
+  "count": 10,
+  "assets": [
+    {
+      "id": 35,
+      "key": "doge_muscular",
+      "filename": "035_doge_muscular.png",
+      "master_path": "png_512/035_doge_muscular.png",
+      "runtime_path": "runtime_256/035_doge_muscular.png",
+      "size_master": [
+        512,
+        512
+      ],
+      "size_runtime": [
+        256,
+        256
+      ],
+      "alpha_bbox_512": [
+        16,
+        36,
+        504,
+        490
+      ],
+      "alpha_coverage_512": 0.5282,
+      "transparent_background": true,
+      "touches_edge": false,
+      "portrait_crop": "upper-half / bust crop"
+    },
+    {
+      "id": 36,
+      "key": "buffalo_cheerful",
+      "filename": "036_buffalo_cheerful.png",
+      "master_path": "png_512/036_buffalo_cheerful.png",
+      "runtime_path": "runtime_256/036_buffalo_cheerful.png",
+      "size_master": [
+        512,
+        512
+      ],
+      "size_runtime": [
+        256,
+        256
+      ],
+      "alpha_bbox_512": [
+        108,
+        43,
+        394,
+        495
+      ],
+      "alpha_coverage_512": 0.3156,
+      "transparent_background": true,
+      "touches_edge": false,
+      "portrait_crop": "upper-half / bust crop"
+    },
+    {
+      "id": 37,
+      "key": "dinosaur_green",
+      "filename": "037_dinosaur_green.png",
+      "master_path": "png_512/037_dinosaur_green.png",
+      "runtime_path": "runtime_256/037_dinosaur_green.png",
+      "size_master": [
+        512,
+        512
+      ],
+      "size_runtime": [
+        256,
+        256
+      ],
+      "alpha_bbox_512": [
+        0,
+        39,
+        512,
+        502
+      ],
+      "alpha_coverage_512": 0.4027,
+      "transparent_background": true,
+      "touches_edge": true,
+      "portrait_crop": "upper-half / bust crop"
+    },
+    {
+      "id": 38,
+      "key": "goat_excited",
+      "filename": "038_goat_excited.png",
+      "master_path": "png_512/038_goat_excited.png",
+      "runtime_path": "runtime_256/038_goat_excited.png",
+      "size_master": [
+        512,
+        512
+      ],
+      "size_runtime": [
+        256,
+        256
+      ],
+      "alpha_bbox_512": [
+        62,
+        47,
+        403,
+        449
+      ],
+      "alpha_coverage_512": 0.3286,
+      "transparent_background": true,
+      "touches_edge": false,
+      "portrait_crop": "upper-half / bust crop"
+    },
+    {
+      "id": 39,
+      "key": "bear_conical_hat",
+      "filename": "039_bear_conical_hat.png",
+      "master_path": "png_512/039_bear_conical_hat.png",
+      "runtime_path": "runtime_256/039_bear_conical_hat.png",
+      "size_master": [
+        512,
+        512
+      ],
+      "size_runtime": [
+        256,
+        256
+      ],
+      "alpha_bbox_512": [
+        50,
+        12,
+        477,
+        493
+      ],
+      "alpha_coverage_512": 0.5723,
+      "transparent_background": true,
+      "touches_edge": false,
+      "portrait_crop": "upper-half / bust crop"
+    },
+    {
+      "id": 40,
+      "key": "bear_bandaged",
+      "filename": "040_bear_bandaged.png",
+      "master_path": "png_512/040_bear_bandaged.png",
+      "runtime_path": "runtime_256/040_bear_bandaged.png",
+      "size_master": [
+        512,
+        512
+      ],
+      "size_runtime": [
+        256,
+        256
+      ],
+      "alpha_bbox_512": [
+        1,
+        0,
+        432,
+        512
+      ],
+      "alpha_coverage_512": 0.4362,
+      "transparent_background": true,
+      "touches_edge": true,
+      "portrait_crop": "upper-half / bust crop"
+    },
+    {
+      "id": 41,
+      "key": "frog_sad",
+      "filename": "041_frog_sad.png",
+      "master_path": "png_512/041_frog_sad.png",
+      "runtime_path": "runtime_256/041_frog_sad.png",
+      "size_master": [
+        512,
+        512
+      ],
+      "size_runtime": [
+        256,
+        256
+      ],
+      "alpha_bbox_512": [
+        91,
+        73,
+        412,
+        471
+      ],
+      "alpha_coverage_512": 0.3517,
+      "transparent_background": true,
+      "touches_edge": false,
+      "portrait_crop": "upper-half / bust crop"
+    },
+    {
+      "id": 42,
+      "key": "chicken_shocked",
+      "filename": "042_chicken_shocked.png",
+      "master_path": "png_512/042_chicken_shocked.png",
+      "runtime_path": "runtime_256/042_chicken_shocked.png",
+      "size_master": [
+        512,
+        512
+      ],
+      "size_runtime": [
+        256,
+        256
+      ],
+      "alpha_bbox_512": [
+        96,
+        46,
+        420,
+        451
+      ],
+      "alpha_coverage_512": 0.346,
+      "transparent_background": true,
+      "touches_edge": false,
+      "portrait_crop": "upper-half / bust crop"
+    },
+    {
+      "id": 43,
+      "key": "cat_tongue_out",
+      "filename": "043_cat_tongue_out.png",
+      "master_path": "png_512/043_cat_tongue_out.png",
+      "runtime_path": "runtime_256/043_cat_tongue_out.png",
+      "size_master": [
+        512,
+        512
+      ],
+      "size_runtime": [
+        256,
+        256
+      ],
+      "alpha_bbox_512": [
+        72,
+        34,
+        439,
+        487
+      ],
+      "alpha_coverage_512": 0.5063,
+      "transparent_background": true,
+      "touches_edge": false,
+      "portrait_crop": "upper-half / bust crop"
+    },
+    {
+      "id": 44,
+      "key": "panda_pointing",
+      "filename": "044_panda_pointing.png",
+      "master_path": "png_512/044_panda_pointing.png",
+      "runtime_path": "runtime_256/044_panda_pointing.png",
+      "size_master": [
+        512,
+        512
+      ],
+      "size_runtime": [
+        256,
+        256
+      ],
+      "alpha_bbox_512": [
+        62,
+        47,
+        403,
+        449
+      ],
+      "alpha_coverage_512": 0.3286,
+      "transparent_background": true,
+      "touches_edge": false,
+      "portrait_crop": "upper-half / bust crop"
+    }
+  ]
+}

@@ -35,7 +35,7 @@ export function Game() {
             onSettings={() => setShowSettings(true)}
             onHint={game.hintPair}
             onShuffle={game.shuffleBoard}
-            onBomb={game.nextLevel}
+            onBomb={game.bombPair}
           />
 
           <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2 lg:grid lg:grid-cols-[clamp(220px,22vw,280px)_minmax(0,1fr)] lg:gap-4">
@@ -62,7 +62,7 @@ export function Game() {
                 <div className="mt-3 grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
                   <SupportButton icon={<Lightbulb />} label="Gợi ý" onClick={game.hintPair} />
                   <SupportButton icon={<Shuffle />} label="Đảo" onClick={game.shuffleBoard} />
-                  <SupportButton icon={<Bomb />} label="Bom" onClick={game.nextLevel} />
+                  <SupportButton icon={<Bomb />} label="Bom" onClick={game.bombPair} />
                 </div>
               </div>
 
@@ -124,7 +124,7 @@ export function Game() {
                   </div>
                 </div>
 
-                {game.wrongIds.length === 2 && <WrongToast />}
+                {game.wrongIds.length === 2 && game.wrongReason && <WrongToast reason={game.wrongReason} />}
                 {game.shuffleNotice && <ShuffleToast />}
                 {game.status === "won" && (
                   <WinOverlay score={game.score} onNextLevel={game.nextLevel} onShowScores={() => setShowScores(true)} />

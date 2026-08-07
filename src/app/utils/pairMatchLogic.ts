@@ -1,12 +1,5 @@
-export type TileKind =
-  | "peanut"
-  | "cat"
-  | "dog"
-  | "bamboo"
-  | "kite"
-  | "stork"
-  | "rice"
-  | "drum";
+/** Tile kind = global character ID, e.g. "legacy:01" or "new:035". */
+export type TileKind = string;
 
 export interface PairTile {
   id: string;
@@ -16,25 +9,16 @@ export interface PairTile {
   removed: boolean;
 }
 
+export const BOARD_SIZES = [8, 10, 12, 14, 16] as const;
+export const MAX_BOARD_LEVEL = BOARD_SIZES.length;
+
 export function getBoardSize(level: number) {
-  // Keep every board even so the catalog can always be split into pairs.
-  // 16x16 is reserved for the final challenge instead of being the default.
-  const size = [8, 10, 12, 14, 16][Math.min(Math.max(level, 1), 5) - 1];
+  // The final 16×16 board repeats as the documented endless challenge.
+  const size = BOARD_SIZES[Math.min(Math.max(level, 1), MAX_BOARD_LEVEL) - 1];
   return { rows: size, cols: size };
 }
 
-const TILE_KINDS: TileKind[] = [
-  "peanut",
-  "cat",
-  "dog",
-  "bamboo",
-  "kite",
-  "stork",
-  "rice",
-  "drum",
-];
-
-function mulberry32(seed: number): () => number {
+export function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
   return function () {
     a |= 0;
@@ -54,22 +38,94 @@ function fisherYatesShuffle<T>(arr: T[], rng: () => number): T[] {
   return out;
 }
 
-export function createPairBoard(level: number, seed?: number): PairTile[] {
-  const { rows, cols } = getBoardSize(level);
-  const total = rows * cols;
-  const pairCount = total / 2;
+/**
+ * Create a board using a balanced pair distribution.
+ *
+ * Steps:
+ *  1. Determine pairCount = rows*cols/2
+ *  2. activeCharacterCount = min(pairCount, catalog.length)
+ *  3. Fisher-Yates shuffle catalog, pick first activeCharacterCount
+ *  4. Assign base + optional extra pairs so max-diff ≤ 1
+ *  5. Flatten to [kind, kind, …], shuffle positions
+ *
+ * @param characterIds  Global character IDs from the loaded catalog
+ * @param rows          Board rows
+ * @param cols          Board cols
+ * @param seed          Optional RNG seed (for tests)
+ */
+export function createPairBoard(
+  characterIds: readonly string[],
+  rows: number,
+  cols: number,
+  seed?: number,
+): PairTile[];
 
-  const doubled: TileKind[] = [];
-  for (let i = 0; i < pairCount; i++) {
-    const kind = TILE_KINDS[i % TILE_KINDS.length];
-    doubled.push(kind, kind);
+/** @deprecated Legacy overload (level-based). Pass characterIds explicitly. */
+export function createPairBoard(level: number, seed?: number): PairTile[];
+
+export function createPairBoard(
+  characterIdsOrLevel: readonly string[] | number,
+  rowsOrSeed?: number,
+  cols?: number,
+  seed?: number,
+): PairTile[] {
+  // Legacy overload support
+  if (typeof characterIdsOrLevel === "number") {
+    const level = characterIdsOrLevel;
+    const legacySeed = rowsOrSeed;
+    const { rows: r, cols: c } = getBoardSize(level);
+    // Fallback: generate placeholder kinds until GameBoard provides real catalog
+    const fallbackKinds: string[] = [];
+    for (let i = 0; i < 20; i++) fallbackKinds.push(`legacy:${String(i + 1).padStart(2, "0")}`);
+    return _createBoard(fallbackKinds, r, c, legacySeed);
   }
 
+  const characterIds = characterIdsOrLevel;
+  const rows2 = rowsOrSeed!;
+  const cols2 = cols!;
+  return _createBoard(characterIds, rows2, cols2, seed);
+}
+
+function _createBoard(
+  characterIds: readonly string[],
+  rows: number,
+  cols: number,
+  seed?: number,
+): PairTile[] {
+  const total = rows * cols;
+  if (total % 2 !== 0) throw new Error(`Board size ${rows}×${cols} is not even`);
+  const pairCount = total / 2;
+
   const rng = mulberry32(seed ?? (Math.random() * 0xffffffff) >>> 0);
-  const shuffled = fisherYatesShuffle(doubled, rng);
+
+  // Step 1: pick active characters
+  const activeCount = Math.min(pairCount, characterIds.length);
+  if (activeCount === 0) throw new Error("No character IDs provided");
+  const shuffledCatalog = fisherYatesShuffle([...characterIds], rng);
+  const active = shuffledCatalog.slice(0, activeCount);
+
+  // Step 2: balanced pair distribution
+  const basePairs = Math.floor(pairCount / activeCount);
+  const extraPairs = pairCount % activeCount;
+  // Shuffle active pool to randomise which chars get the extra pair
+  const shuffledActive = fisherYatesShuffle(active, rng);
+
+  const kindList: string[] = [];
+  for (let i = 0; i < activeCount; i++) {
+    const pairs = basePairs + (i < extraPairs ? 1 : 0);
+    for (let p = 0; p < pairs; p++) {
+      kindList.push(shuffledActive[i]);
+    }
+  }
+
+  // Step 3: duplicate each kind into 2 tiles, shuffle positions
+  const tileKinds: string[] = [];
+  for (const k of kindList) tileKinds.push(k, k);
+
+  const shuffledKinds = fisherYatesShuffle(tileKinds, rng);
   const runId = Math.floor(Math.random() * 1000000);
 
-  return shuffled.map((kind, index) => ({
+  return shuffledKinds.map((kind, index) => ({
     id: `tile-${runId}-${index}`,
     kind,
     row: Math.floor(index / cols),
@@ -79,6 +135,16 @@ export function createPairBoard(level: number, seed?: number): PairTile[] {
 }
 
 export interface Point { r: number; c: number; }
+
+export type PairMatchResult =
+  | { reason: "match"; path: Point[] }
+  | { reason: "different-kind" | "blocked-path" | "invalid-tile" };
+
+export interface AvailableMatch {
+  first: PairTile;
+  second: PairTile;
+  path: Point[];
+}
 
 export function buildBoardOccupancy(tiles: PairTile[], rows: number, cols: number): Uint8Array {
   const occupancy = new Uint8Array(rows * cols);
@@ -96,7 +162,7 @@ export function findPikachuPath(
   cols: number,
   occupancy?: Uint8Array,
 ): Point[] | null {
-  if (a.kind !== b.kind || a.id === b.id) return null;
+  if (a.kind !== b.kind || a.id === b.id || a.removed || b.removed) return null;
   const boardOccupancy = occupancy ?? buildBoardOccupancy(tiles, rows, cols);
 
   const isEmptyNode = (r: number, c: number) => {
@@ -174,6 +240,44 @@ export function findPikachuPath(
   return null;
 }
 
+/**
+ * Separates identity errors from pathfinding errors so UI feedback can remain
+ * truthful. A physical tile instance (`id`) is never its match identity.
+ */
+export function evaluatePairMatch(
+  tiles: PairTile[],
+  a: PairTile,
+  b: PairTile,
+  rows: number,
+  cols: number,
+  occupancy?: Uint8Array,
+): PairMatchResult {
+  if (a.id === b.id || a.removed || b.removed) return { reason: "invalid-tile" };
+  if (a.kind !== b.kind) return { reason: "different-kind" };
+
+  const path = findPikachuPath(tiles, a, b, rows, cols, occupancy);
+  return path ? { reason: "match", path } : { reason: "blocked-path" };
+}
+
+/** Finds one real, currently connectable pair for Hint and Bomb. */
+export function findAvailableMatch(
+  tiles: PairTile[],
+  rows: number,
+  cols: number,
+): AvailableMatch | null {
+  const visible = tiles.filter((tile) => !tile.removed);
+  const occupancy = buildBoardOccupancy(tiles, rows, cols);
+  for (let i = 0; i < visible.length; i += 1) {
+    for (let j = i + 1; j < visible.length; j += 1) {
+      const result = evaluatePairMatch(tiles, visible[i], visible[j], rows, cols, occupancy);
+      if (result.reason === "match") {
+        return { first: visible[i], second: visible[j], path: result.path };
+      }
+    }
+  }
+  return null;
+}
+
 export function canMatch(
   tiles: PairTile[],
   a: PairTile,
@@ -182,9 +286,7 @@ export function canMatch(
   cols: number,
   occupancy?: Uint8Array,
 ): boolean {
-  if (a.id === b.id) return false;
-  if (a.removed || b.removed) return false;
-  return findPikachuPath(tiles, a, b, rows, cols, occupancy) !== null;
+  return evaluatePairMatch(tiles, a, b, rows, cols, occupancy).reason === "match";
 }
 
 export function removeMatchedPair(
@@ -232,10 +334,13 @@ export function shuffleRemaining(tiles: PairTile[], seed?: number): PairTile[] {
   });
 }
 
-export function applyGravity(tiles: PairTile[], level: number, rows: number, cols: number): PairTile[] {
-  const mode = level % 5;
-  if (mode === 1) return tiles; // No shift (Level 1, 6, 11...)
-
+/**
+ * Make every remaining tile fall vertically to the bottom of its own column.
+ *
+ * `level` remains in the signature so existing callers keep their stable
+ * contract, but gravity is deliberately no longer level-dependent.
+ */
+export function applyGravity(tiles: PairTile[], _level: number, rows: number, cols: number): PairTile[] {
   const grid: (PairTile | null)[][] = Array(rows)
     .fill(null)
     .map(() => Array(cols).fill(null));
@@ -250,44 +355,11 @@ export function applyGravity(tiles: PairTile[], level: number, rows: number, col
     .fill(null)
     .map(() => Array(cols).fill(null));
 
-  if (mode === 2) {
-    // Shift Down
-    for (let c = 0; c < cols; c++) {
-      let writeR = rows - 1;
-      for (let r = rows - 1; r >= 0; r--) {
-        if (grid[r][c]) {
-          nextGrid[writeR--][c] = grid[r][c];
-        }
-      }
-    }
-  } else if (mode === 3) {
-    // Shift Left
-    for (let r = 0; r < rows; r++) {
-      let writeC = 0;
-      for (let c = 0; c < cols; c++) {
-        if (grid[r][c]) {
-          nextGrid[r][writeC++] = grid[r][c];
-        }
-      }
-    }
-  } else if (mode === 4) {
-    // Shift Up
-    for (let c = 0; c < cols; c++) {
-      let writeR = 0;
-      for (let r = 0; r < rows; r++) {
-        if (grid[r][c]) {
-          nextGrid[writeR++][c] = grid[r][c];
-        }
-      }
-    }
-  } else if (mode === 0) {
-    // Shift Right
-    for (let r = 0; r < rows; r++) {
-      let writeC = cols - 1;
-      for (let c = cols - 1; c >= 0; c--) {
-        if (grid[r][c]) {
-          nextGrid[r][writeC--] = grid[r][c];
-        }
+  for (let c = 0; c < cols; c++) {
+    let writeR = rows - 1;
+    for (let r = rows - 1; r >= 0; r--) {
+      if (grid[r][c]) {
+        nextGrid[writeR--][c] = grid[r][c];
       }
     }
   }

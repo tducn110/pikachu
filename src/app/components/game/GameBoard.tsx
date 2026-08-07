@@ -1,9 +1,11 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Application, Container, Graphics, Rectangle, Sprite } from "pixi.js";
+import gsap from "gsap";
+import { GlowFilter } from "pixi-filters";
 import { getBoardSize, type PairTile, type Point, type TileKind } from "../../utils/pairMatchLogic";
 import { palette as c } from "./gameThemes";
-import { loadPikachuTileAssets, type PikachuTileAssets } from "./pixi/loadPikachuTileAssets";
-import { TILE_ICON_FILL_RATIO } from "./pixi/pikachuTileCatalog";
+import { loadPikachuCharacterTextures, type CharacterTextures } from "./pixi/loadPikachuCharacterTextures";
+import { CHARACTER_BY_ID, TILE_ICON_FILL_RATIO } from "./pixi/pikachuCharacterCatalog";
 import { perfDiagnostics } from "./pixi/pixiPerfDiagnostics";
 
 interface Props {
@@ -28,6 +30,9 @@ interface TileView {
   lastWrong: boolean;
   lastHint: boolean;
   lastVisible: boolean;
+  isSpawned: boolean;
+  targetX: number;
+  targetY: number;
 }
 
 interface BoardState {
@@ -88,7 +93,8 @@ export const GameBoard = memo(function GameBoard({
     const tileLayer = new Container();
     const pathLayer = new Graphics();
     pathLayer.eventMode = "none";
-    let tileAssets: PikachuTileAssets | null = null;
+    pathLayer.filters = [new GlowFilter({ distance: 12, outerStrength: 2, color: 0xffffff })];
+    let tileAssets: CharacterTextures | null = null;
     // Reuse a fixed pool. Tile ids are regenerated on reset, so a Map keyed by
     // id would retain old display objects and grow forever during a session.
     const tileViews: TileView[] = [];
@@ -152,6 +158,9 @@ export const GameBoard = memo(function GameBoard({
             lastWrong: false,
             lastHint: false,
             lastVisible: false,
+            isSpawned: false,
+            targetX: -1,
+            targetY: -1,
           };
           icon.anchor.set(0.5);
           icon.eventMode = "none";
@@ -179,12 +188,72 @@ export const GameBoard = memo(function GameBoard({
         const cardY = -half + gap;
         const layoutChanged = currentView.lastTileSize !== tileSize;
 
+        if (currentView.tileId !== tile.id) {
+          currentView.isSpawned = false;
+        }
         currentView.tileId = tile.id;
-        currentView.root.visible = visible;
-        currentView.root.position.set(originX + (tile.col + 0.5) * tileSize, originY + (tile.row + 0.5) * tileSize);
+
+        if (!visible && currentView.lastVisible) {
+          gsap.timeline({
+            onComplete: () => {
+              currentView.root.visible = false;
+              currentView.root.alpha = 1;
+            }
+          })
+          .to(currentView.root.scale, { x: 1.25, y: 1.25, duration: 0.1, ease: "power2.out" })
+          .to(currentView.root.scale, { x: 0, y: 0, duration: 0.2, ease: "back.in(2)" }, "+=0.05")
+          .to(currentView.root, { alpha: 0, duration: 0.2 }, "-=0.2");
+        } else if (visible) {
+          currentView.root.visible = true;
+        } else {
+          currentView.root.visible = false;
+        }
+
+        const targetX = originX + (tile.col + 0.5) * tileSize;
+        const targetY = originY + (tile.row + 0.5) * tileSize;
+
+        if (layoutChanged && currentView.isSpawned) {
+          gsap.killTweensOf(currentView.root.position);
+          currentView.root.position.set(targetX, targetY);
+          currentView.targetX = targetX;
+          currentView.targetY = targetY;
+        } else if (!currentView.isSpawned) {
+          currentView.isSpawned = true;
+          currentView.targetX = targetX;
+          currentView.targetY = targetY;
+          gsap.killTweensOf(currentView.root);
+          gsap.killTweensOf(currentView.root.scale);
+          gsap.killTweensOf(currentView.root.position);
+          currentView.root.alpha = 1;
+          currentView.root.position.set(targetX, targetY);
+          currentView.root.scale.set(isSelected ? 1.05 : 1);
+        } else if (currentView.targetX !== targetX || currentView.targetY !== targetY) {
+          currentView.targetX = targetX;
+          currentView.targetY = targetY;
+          const staggerDelay = (currentRows - tile.row) * 0.05 + tile.col * 0.02;
+          gsap.killTweensOf(currentView.root.position);
+          gsap.to(currentView.root.position, {
+            x: targetX,
+            y: targetY,
+            duration: 0.45,
+            delay: staggerDelay,
+            ease: "power2.in",
+            onComplete: () => {
+              gsap.timeline()
+                .to(currentView.root.scale, { x: 1.15, y: 0.82, duration: 0.08, ease: "power1.out" })
+                .to(currentView.root.scale, { x: 0.90, y: 1.08, duration: 0.08, ease: "power1.inOut" })
+                .to(currentView.root.scale, { x: 1.00, y: 1.00, duration: 0.10, ease: "sine.out" });
+            }
+          });
+        }
+
         perfDiagnostics.count("pixi.positionUpdates");
-        currentView.root.scale.set(isSelected ? 1.05 : 1);
-        currentView.root.rotation = isWrong ? 0.035 : 0;
+
+        if (isWrong && !currentView.lastWrong) {
+          gsap.fromTo(currentView.root, { rotation: -0.1 }, { rotation: 0.1, duration: 0.05, yoyo: true, repeat: 5, onComplete: () => currentView.root.rotation = 0 });
+        } else if (!isWrong) {
+          currentView.root.rotation = 0;
+        }
         currentView.root.eventMode = visible ? "static" : "none";
 
         if (
@@ -194,6 +263,14 @@ export const GameBoard = memo(function GameBoard({
           currentView.lastHint !== isHint ||
           currentView.lastVisible !== visible
         ) {
+          if (currentView.lastSelected !== isSelected) {
+            gsap.killTweensOf(currentView.root.scale);
+            if (isSelected) {
+              gsap.to(currentView.root.scale, { x: 1.08, y: 1.08, duration: 0.15, ease: "power2.out" });
+            } else {
+              gsap.to(currentView.root.scale, { x: 1, y: 1, duration: 0.15, ease: "power2.out" });
+            }
+          }
           currentView.card.clear();
           perfDiagnostics.count("pixi.graphicsRedraws");
           currentView.card.roundRect(cardX, cardY, cardSize, cardSize, Math.max(3, tileSize * 0.12));
@@ -220,7 +297,7 @@ export const GameBoard = memo(function GameBoard({
 
         const kindChanged = currentView.kind !== tile.kind;
         if (kindChanged) {
-          const texture = tileAssets.texturesByKind.get(tile.kind);
+          const texture = tileAssets.get(tile.kind);
           if (!texture) {
             throw new Error(`No loaded Pikachu texture mapped for tile kind: ${tile.kind}`);
           }
@@ -230,9 +307,12 @@ export const GameBoard = memo(function GameBoard({
         }
         if (kindChanged || layoutChanged) {
           const desiredSize = tileSize * TILE_ICON_FILL_RATIO;
-          const scale = desiredSize / currentView.icon.texture.orig.width;
+          const maxDim = Math.max(currentView.icon.texture.orig.width, currentView.icon.texture.orig.height);
+          const baseScale = desiredSize / maxDim;
+          const iconScaleX = CHARACTER_BY_ID.get(tile.kind)?.iconScaleX ?? 1;
+          currentView.icon.anchor.set(0.5, 0.5);
           currentView.icon.position.set(0, 0);
-          currentView.icon.scale.set(scale);
+          currentView.icon.scale.set(baseScale * iconScaleX, baseScale);
         }
       }
 
@@ -242,7 +322,14 @@ export const GameBoard = memo(function GameBoard({
           lastPathOriginX !== originX ||
           lastPathOriginY !== originY
         ) {
+          gsap.killTweensOf(pathLayer);
           drawPath(pathLayer, state.activePath, originX, originY, tileSize);
+          if (state.activePath && state.activePath.length > 1 && lastPath !== state.activePath) {
+            pathLayer.alpha = 0;
+            gsap.to(pathLayer, { alpha: 1, duration: 0.1, yoyo: true, repeat: 3, ease: "power1.inOut" });
+          } else if (!state.activePath) {
+            pathLayer.alpha = 1;
+          }
           lastPath = state.activePath;
           lastPathTileSize = tileSize;
           lastPathOriginX = originX;
@@ -266,9 +353,21 @@ export const GameBoard = memo(function GameBoard({
     const resizeObserver = new ResizeObserver(scheduleDraw);
     redrawRef.current = scheduleDraw;
 
+    const renderApp = () => {
+      if (appInitialized && !destroyed) app.render();
+    };
+    gsap.ticker.add(renderApp);
+
     const destroyApp = () => {
       if (appInitialized && !destroyed) {
         destroyed = true;
+        gsap.ticker.remove(renderApp);
+        gsap.killTweensOf(pathLayer);
+        for (const view of tileViews) {
+          gsap.killTweensOf(view.root);
+          gsap.killTweensOf(view.root.position);
+          gsap.killTweensOf(view.root.scale);
+        }
         perfDiagnostics.count("pixi.applicationDestroyed");
         app.destroy({ removeView: true, releaseGlobalResources: true }, { children: true });
       }
@@ -290,7 +389,7 @@ export const GameBoard = memo(function GameBoard({
       if (disposed || failed) destroyApp();
     });
 
-    void Promise.all([initPromise, loadPikachuTileAssets()])
+    void Promise.all([initPromise, loadPikachuCharacterTextures()])
       .then(([, assets]) => {
         if (disposed) {
           destroyApp();
@@ -324,6 +423,7 @@ export const GameBoard = memo(function GameBoard({
       redrawRef.current = null;
       resizeObserver.disconnect();
       if (drawFrame !== 0) cancelAnimationFrame(drawFrame);
+      gsap.ticker.remove(renderApp);
       destroyApp();
     };
   }, []);

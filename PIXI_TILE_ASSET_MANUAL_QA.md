@@ -4,7 +4,7 @@
 
 `TILE_ICON_FILL_RATIO = 0.88`
 
-Vị trí constant: `src/app/components/game/pixi/pikachuTileCatalog.ts`
+Vị trí constant: `src/app/components/game/pixi/pikachuCharacterCatalog.ts`
 
 Agent không chạy visual smoke test. Người dùng tự mở game và đánh dấu các mục sau.
 
@@ -14,6 +14,7 @@ Agent không chạy visual smoke test. Người dùng tự mở game và đánh 
 - [ ] Không có icon placeholder cũ
 - [ ] Không có request 404
 - [ ] Console không có lỗi atlas hoặc texture
+- [ ] Không có hai character khác kind nhưng cùng artwork (đặc biệt kiểm tra dê/Panda)
 
 ## Tile appearance
 
@@ -51,4 +52,3 @@ Agent không chạy visual smoke test. Người dùng tự mở game và đánh 
 - [ ] Settings/pause khóa input đúng
 - [ ] Reset level không load lại atlas
 - [ ] Đổi level không nháy placeholder
-

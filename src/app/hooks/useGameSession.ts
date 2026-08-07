@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { type ScoreStats, loadStats, saveStats } from "../utils/stats";
-import { getBoardSize } from "../utils/pairMatchLogic";
+import { getBoardSize, MAX_BOARD_LEVEL } from "../utils/pairMatchLogic";
 
 export type GameStatus = "playing" | "won" | "lost";
 
@@ -79,15 +79,16 @@ export function useGameSession() {
   }, [score]);
 
   const resetSession = useCallback((isNextLevel = false) => {
+    const nextLevelNum = isNextLevel ? Math.min(level + 1, MAX_BOARD_LEVEL) : 1;
     if (!isNextLevel) {
       setScore(0);
       setLevel(1);
     } else {
-      setLevel((l) => l + 1);
+      // Level 5 is the documented repeatable 16×16 final challenge.
+      setLevel(nextLevelNum);
     }
     setMoves(0);
     setCombo(0);
-    const nextLevelNum = isNextLevel ? level + 1 : 1;
     const newMaxTime = getLevelMaxTime(nextLevelNum);
     setTimeLeft(newMaxTime);
     setStatus("playing");
