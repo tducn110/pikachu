@@ -16,8 +16,12 @@
  *   TOTAL UNIQUE = 19
  */
 
-export const TILE_ICON_FILL_RATIO = 0.88;
-export const PIKACHU_TILE_FRAME_SIZE = 256;
+/**
+ * Global safe-area: character occupies 76-80% of cell dimension.
+ * Allows visual breathing room and prevents border-touching (issue #16, #19).
+ */
+export const TILE_ICON_FILL_RATIO = 0.78;
+
 
 // ─── Atlas URLs (Vite public root, browser-safe) ─────────────────────────────
 
@@ -39,7 +43,9 @@ export interface CharacterDefinition {
   readonly frame: string;
   readonly label: string;
   /** Optional visual correction for unusually narrow source artwork. */
+  readonly iconScale?: number;
   readonly iconScaleX?: number;
+  readonly iconOffsetY?: number;
 }
 
 /**
@@ -49,28 +55,30 @@ export interface CharacterDefinition {
 export const PIKACHU_CHARACTERS: readonly CharacterDefinition[] = [
   // ── Legacy pack (10 chars) ──────────────────────────────────────────────────
   { id: "legacy:01", pack: "legacy", frame: "tile_01_troll",            label: "Troll" },
-  { id: "legacy:02", pack: "legacy", frame: "tile_02_worried_panda",    label: "Panda lo lắng" },
+  { id: "legacy:02", pack: "legacy", frame: "tile_02_worried_panda",    label: "Panda lo lắng", iconScale: 1.04 },
   { id: "legacy:03", pack: "legacy", frame: "tile_03_boxing_fox",       label: "Cáo boxing" },
-  { id: "legacy:04", pack: "legacy", frame: "tile_04_angry_rabbit",     label: "Thỏ giận" },
-  { id: "legacy:05", pack: "legacy", frame: "tile_05_sleepy_bear_ball", label: "Gấu ngủ" },
+  { id: "legacy:04", pack: "legacy", frame: "tile_04_angry_rabbit",     label: "Thỏ giận", iconScale: 1.07 },
+  { id: "legacy:05", pack: "legacy", frame: "tile_05_sleepy_bear_ball", label: "Gấu ngủ", iconScale: 0.94 },
   { id: "legacy:06", pack: "legacy", frame: "tile_06_smug_brown_bear",  label: "Gấu nâu" },
   { id: "legacy:07", pack: "legacy", frame: "tile_07_goofy_tiger",      label: "Hổ ngố" },
   { id: "legacy:08", pack: "legacy", frame: "tile_08_green_gift_mascot",label: "Hộp quà" },
-  { id: "legacy:09", pack: "legacy", frame: "tile_09_lion_dance",       label: "Múa lân" },
-  { id: "legacy:10", pack: "legacy", frame: "tile_10_goofy_yellow_dragon", label: "Rồng vàng" },
-  // ── New 035–044 pack (10 chars) ─────────────────────────────────────────────
-  { id: "new:035",   pack: "new",    frame: "035_doge_muscular.png",    label: "Doge cơ bắp" },
-  { id: "new:036",   pack: "new",    frame: "036_buffalo_cheerful.png", label: "Buffalo vui vẻ", iconScaleX: 1.17 },
+  // lion dance is visually very wide — scale down a touch
+  { id: "legacy:09", pack: "legacy", frame: "tile_09_lion_dance",       label: "Múa lân", iconScaleX: 0.88, iconScale: 0.97 },
+  { id: "legacy:10", pack: "legacy", frame: "tile_10_goofy_yellow_dragon", label: "Rồng vàng", iconScale: 1.10 },
+  // ── New 035–044 pack (9 chars) — half-portrait crops need tighter scale ────
+  // muscular doge is extremely large in the source portrait
+  { id: "new:035",   pack: "new",    frame: "035_doge_muscular.png",    label: "Doge cơ bắp",     iconScaleX: 0.82, iconScale: 0.96 },
+  { id: "new:036",   pack: "new",    frame: "036_buffalo_cheerful.png", label: "Buffalo vui vẻ" },
   { id: "new:037",   pack: "new",    frame: "037_dinosaur_green.png",   label: "Khủng long xanh" },
-  { id: "new:038",   pack: "new",    frame: "038_goat_excited.png",     label: "Dê hứng khởi" },
-  { id: "new:039",   pack: "new",    frame: "039_bear_conical_hat.png", label: "Gấu nón lá" },
+  { id: "new:038",   pack: "new",    frame: "038_goat_excited.png",     label: "Dê hướng khởi", iconScale: 1.07 },
+  { id: "new:039",   pack: "new",    frame: "039_bear_conical_hat.png", label: "Gấu nón lá", iconScale: 1.03 },
   { id: "new:040",   pack: "new",    frame: "040_bear_bandaged.png",    label: "Gấu băng bó" },
-  { id: "new:041",   pack: "new",    frame: "041_frog_sad.png",         label: "Ếch buồn" },
-  { id: "new:042",   pack: "new",    frame: "042_chicken_shocked.png",  label: "Gà giật mình" },
-  { id: "new:043",   pack: "new",    frame: "043_cat_tongue_out.png",   label: "Mèo le lưỡi" },
+  { id: "new:041",   pack: "new",    frame: "041_frog_sad.png",         label: "Ế ch buồn" },
+  { id: "new:042",   pack: "new",    frame: "042_chicken_shocked.png",  label: "Gà giật mình", iconScale: 1.05 },
+  { id: "new:043",   pack: "new",    frame: "043_cat_tongue_out.png",   label: "Mèo le lưỡi", iconScale: 1.03 },
 ] as const;
 
-export const TOTAL_UNIQUE_CHARACTERS = PIKACHU_CHARACTERS.length; // 20
+export const TOTAL_UNIQUE_CHARACTERS = PIKACHU_CHARACTERS.length; // 19
 
 /** Quick lookup: characterId → CharacterDefinition */
 export const CHARACTER_BY_ID: ReadonlyMap<string, CharacterDefinition> = new Map(

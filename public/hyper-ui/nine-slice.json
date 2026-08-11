@@ -1,0 +1,30 @@
+{
+  "title-bar": {
+    "file": "surfaces/title-bar.png",
+    "leftWidth": 162,
+    "topHeight": 63,
+    "rightWidth": 162,
+    "bottomHeight": 63
+  },
+  "powerup-row": {
+    "file": "surfaces/powerup-row.png",
+    "leftWidth": 234,
+    "topHeight": 56,
+    "rightWidth": 156,
+    "bottomHeight": 56
+  },
+  "info-row": {
+    "file": "surfaces/info-row.png",
+    "leftWidth": 223,
+    "topHeight": 57,
+    "rightWidth": 70,
+    "bottomHeight": 57
+  },
+  "panel-frame": {
+    "file": "surfaces/panel-frame.png",
+    "leftWidth": 101,
+    "topHeight": 96,
+    "rightWidth": 101,
+    "bottomHeight": 96
+  }
+}

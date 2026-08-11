@@ -1,94 +1,116 @@
+import { Howl, Howler } from "howler";
+
 export type Sfx = "tap" | "match" | "wrong" | "win" | "reset";
+export type UiSound = "click" | "close" | "toggle";
 
-/** Tiny WebAudio blip generator — no external assets. */
-export function playBeep(type: Sfx) {
+const SFX_SOURCES: Record<Sfx | UiSound, string> = {
+  tap: "/audio/click.mp3",
+  click: "/audio/click.mp3",
+  close: "/audio/click.mp3",
+  toggle: "/audio/click.mp3",
+  match: "/audio/match.mp3",
+  wrong: "/audio/wrong.mp3",
+  win: "/audio/clear.mp3",
+  reset: "/audio/click.mp3",
+};
+
+const SFX_VOLUME: Record<Sfx | UiSound, number> = {
+  tap: 0.32,
+  click: 0.28,
+  close: 0.24,
+  toggle: 0.24,
+  match: 0.46,
+  wrong: 0.38,
+  win: 0.58,
+  reset: 0.3,
+};
+
+const BGM_SOURCE = "/BGMM_Lofi2.mp3";
+const BGM_VOLUME = 0.18;
+
+let sfxBank: Partial<Record<Sfx | UiSound, Howl>> = {};
+let bgm: Howl | null = null;
+let musicRequested = false;
+let disposed = false;
+let sfxEnabled = true;
+
+function getSfx(type: Sfx | UiSound): Howl {
+  const existing = sfxBank[type];
+  if (existing) return existing;
+
+  const sound = new Howl({
+    src: [SFX_SOURCES[type]],
+    volume: SFX_VOLUME[type],
+    preload: true,
+    html5: false,
+  });
+  sfxBank[type] = sound;
+  return sound;
+}
+
+function getBgm(): Howl {
+  if (bgm) return bgm;
+  bgm = new Howl({
+    src: [BGM_SOURCE],
+    volume: BGM_VOLUME,
+    loop: true,
+    preload: true,
+    html5: true,
+  });
+  return bgm;
+}
+
+function resumeAudioContext(): void {
   try {
-    const AC =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    const ctx = new AC();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    const cfg: Record<Sfx, { freq: number; dur: number; type: OscillatorType }> =
-      {
-        tap: { freq: 520, dur: 0.07, type: "sine" },
-        match: { freq: 740, dur: 0.16, type: "triangle" },
-        wrong: { freq: 180, dur: 0.18, type: "sawtooth" },
-        win: { freq: 880, dur: 0.45, type: "triangle" },
-        reset: { freq: 360, dur: 0.1, type: "sine" },
-      };
-    const { freq, dur, type: wave } = cfg[type];
-    osc.type = wave;
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
-    osc.start();
-    osc.stop(ctx.currentTime + dur);
-    osc.onended = () => ctx.close();
+    const context = Howler.ctx;
+    if (context?.state === "suspended") void context.resume();
   } catch {
-    /* audio not available */
+    // Browsers without Web Audio keep Howler on its HTML5 fallback.
   }
 }
 
-let bgmCtx: AudioContext | null = null;
-let isBgmPlaying = false;
-let bgmTimeout: ReturnType<typeof setTimeout> | null = null;
+export function playSfx(type: Sfx | UiSound): void {
+  if (disposed || !sfxEnabled) return;
+  resumeAudioContext();
+  const sound = getSfx(type);
+  sound.stop();
+  sound.play();
+}
 
-// Pentatonic scale
-const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25];
+export function setSfxEnabled(enabled: boolean): void {
+  sfxEnabled = enabled;
+}
 
-export function toggleBgm(play: boolean) {
-  isBgmPlaying = play;
+export function toggleBgm(play: boolean): void {
+  musicRequested = play;
+  if (disposed) return;
+
   if (!play) {
-    if (bgmTimeout) clearTimeout(bgmTimeout);
-    if (bgmCtx) {
-      bgmCtx.close().catch(() => {});
-      bgmCtx = null;
-    }
+    bgm?.fade(bgm.volume(), 0, 120);
+    window.setTimeout(() => {
+      if (!musicRequested) bgm?.pause();
+    }, 130);
     return;
   }
-  
-  if (bgmCtx) return;
-  try {
-    const AC =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    bgmCtx = new AC();
-    let step = 0;
-    
-    function scheduleNext() {
-      if (!isBgmPlaying || !bgmCtx) return;
-      
-      const osc = bgmCtx.createOscillator();
-      const gain = bgmCtx.createGain();
-      osc.connect(gain);
-      gain.connect(bgmCtx.destination);
-      
-      osc.type = "sine";
-      
-      // Random walk on pentatonic scale for a generative melody
-      step = (step + Math.floor(Math.random() * 3) - 1 + pentatonic.length) % pentatonic.length;
-      osc.frequency.value = pentatonic[step];
-      
-      const t = bgmCtx.currentTime;
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.05, t + 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
-      
-      osc.start(t);
-      osc.stop(t + 0.3);
-      
-      bgmTimeout = setTimeout(scheduleNext, 350);
-    }
-    
-    scheduleNext();
-  } catch {
-    /* audio not available */
-  }
+
+  resumeAudioContext();
+  const track = getBgm();
+  if (!track.playing()) track.play();
+}
+
+/** Prime Howler from a trusted pointer/keyboard gesture when available. */
+export function unlockAudio(): void {
+  if (disposed) return;
+  resumeAudioContext();
+  Howler.autoUnlock = true;
+}
+
+export function destroyAudio(): void {
+  disposed = true;
+  for (const sound of Object.values(sfxBank)) sound?.unload();
+  sfxBank = {};
+  bgm?.unload();
+  bgm = null;
+  musicRequested = false;
+  sfxEnabled = true;
 }

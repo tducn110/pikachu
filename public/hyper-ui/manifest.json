@@ -1,0 +1,331 @@
+{
+  "version": 1,
+  "generatedFrom": {
+    "surfaces": "design-assets/hyper-ui/surfaces-master.png",
+    "icons": "design-assets/hyper-ui/icons-master.png"
+  },
+  "chromaKeys": {
+    "surfaces": [
+      248,
+      3,
+      230
+    ],
+    "icons": [
+      243,
+      17,
+      237
+    ]
+  },
+  "assets": {
+    "title-bar": {
+      "width": 599,
+      "height": 225,
+      "meanAlpha": 173.36,
+      "transparentRatio": 0.2977,
+      "partialAlphaRatio": 0.0979,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "surfaces/title-bar.png",
+      "kind": "surface",
+      "sourceCell": [
+        20,
+        180,
+        620,
+        430
+      ],
+      "sha256": "32a347ec5a32d4d320e748a49bf8db4a502071960f1f98b13abc7c72208375a9",
+      "nineSlice": {
+        "leftWidth": 162,
+        "topHeight": 63,
+        "rightWidth": 162,
+        "bottomHeight": 63
+      }
+    },
+    "powerup-row": {
+      "width": 561,
+      "height": 217,
+      "meanAlpha": 200.77,
+      "transparentRatio": 0.2003,
+      "partialAlphaRatio": 0.0481,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "surfaces/powerup-row.png",
+      "kind": "surface",
+      "sourceCell": [
+        650,
+        180,
+        1220,
+        430
+      ],
+      "sha256": "69cd1053d444eae820079cdf711d342e6b3444f65f8386d71338d5ba05e90e4a",
+      "nineSlice": {
+        "leftWidth": 234,
+        "topHeight": 56,
+        "rightWidth": 156,
+        "bottomHeight": 56
+      }
+    },
+    "info-row": {
+      "width": 562,
+      "height": 219,
+      "meanAlpha": 207.83,
+      "transparentRatio": 0.182,
+      "partialAlphaRatio": 0.0056,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "surfaces/info-row.png",
+      "kind": "surface",
+      "sourceCell": [
+        30,
+        720,
+        620,
+        970
+      ],
+      "sha256": "e9fa60874dfa4172e6c2a590804a4ae945bd8e57d3696000110e74cc316c9316",
+      "nineSlice": {
+        "leftWidth": 223,
+        "topHeight": 57,
+        "rightWidth": 70,
+        "bottomHeight": 57
+      }
+    },
+    "panel-frame": {
+      "width": 562,
+      "height": 535,
+      "meanAlpha": 230.64,
+      "transparentRatio": 0.093,
+      "partialAlphaRatio": 0.0038,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "surfaces/panel-frame.png",
+      "kind": "surface",
+      "sourceCell": [
+        640,
+        560,
+        1230,
+        1130
+      ],
+      "sha256": "4bee09d984923826e2ba8659e8564538705e5698579ea8c8bf06176febc88c0f",
+      "nineSlice": {
+        "leftWidth": 101,
+        "topHeight": 96,
+        "rightWidth": 101,
+        "bottomHeight": 96
+      }
+    },
+    "hint": {
+      "width": 256,
+      "height": 256,
+      "meanAlpha": 87.21,
+      "transparentRatio": 0.6382,
+      "partialAlphaRatio": 0.0461,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "icons/hint.png",
+      "kind": "icon",
+      "sourceCell": [
+        80,
+        80,
+        400,
+        415
+      ],
+      "sha256": "b8b41bc2480bd8ff5e828662b965dc4ab00e4125d8b5e1721b853805545d6f36"
+    },
+    "shuffle": {
+      "width": 256,
+      "height": 256,
+      "meanAlpha": 102.86,
+      "transparentRatio": 0.5614,
+      "partialAlphaRatio": 0.0688,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "icons/shuffle.png",
+      "kind": "icon",
+      "sourceCell": [
+        450,
+        80,
+        800,
+        410
+      ],
+      "sha256": "df64431be753323ce0be070f098e35c0c11bd282f9897ebe149c3f91ed56bbf1"
+    },
+    "bomb": {
+      "width": 256,
+      "height": 256,
+      "meanAlpha": 82.97,
+      "transparentRatio": 0.6559,
+      "partialAlphaRatio": 0.0366,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "icons/bomb.png",
+      "kind": "icon",
+      "sourceCell": [
+        850,
+        50,
+        1220,
+        415
+      ],
+      "sha256": "7712ceb5d5820b8bcd60cea585bd671f3a3ea125081b58b133adb48e8bed2b65"
+    },
+    "settings": {
+      "width": 256,
+      "height": 256,
+      "meanAlpha": 107.33,
+      "transparentRatio": 0.5557,
+      "partialAlphaRatio": 0.046,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "icons/settings.png",
+      "kind": "icon",
+      "sourceCell": [
+        70,
+        460,
+        410,
+        820
+      ],
+      "sha256": "13068fd0e6752cd4b6fa7e10b33c64f5109fa69ec3055c29dc3b833c6207da51"
+    },
+    "trophy": {
+      "width": 256,
+      "height": 256,
+      "meanAlpha": 108.09,
+      "transparentRatio": 0.5475,
+      "partialAlphaRatio": 0.0662,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "icons/trophy.png",
+      "kind": "icon",
+      "sourceCell": [
+        450,
+        450,
+        800,
+        820
+      ],
+      "sha256": "d0e5e9b955d18be3f5a7374c7cd8d2ecba5f34afe40b7520d2ca1515fd6668d5"
+    },
+    "clock": {
+      "width": 256,
+      "height": 256,
+      "meanAlpha": 129.49,
+      "transparentRatio": 0.476,
+      "partialAlphaRatio": 0.0329,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "icons/clock.png",
+      "kind": "icon",
+      "sourceCell": [
+        850,
+        450,
+        1210,
+        820
+      ],
+      "sha256": "8589bd0e354299b68461b085f1cfb0288c07cc4c805907ccc31be5e3fd4d8b3e"
+    },
+    "heart": {
+      "width": 256,
+      "height": 256,
+      "meanAlpha": 122.07,
+      "transparentRatio": 0.5061,
+      "partialAlphaRatio": 0.0312,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "icons/heart.png",
+      "kind": "icon",
+      "sourceCell": [
+        70,
+        870,
+        410,
+        1210
+      ],
+      "sha256": "1cfc83e188e37430d860669ff307398c4d3f015014e32ca143d22f1536809427"
+    },
+    "music": {
+      "width": 256,
+      "height": 256,
+      "meanAlpha": 91.15,
+      "transparentRatio": 0.5942,
+      "partialAlphaRatio": 0.1395,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "icons/music.png",
+      "kind": "icon",
+      "sourceCell": [
+        470,
+        850,
+        780,
+        1190
+      ],
+      "sha256": "2593951c53c88c804a3f2b129dc0fed6dd9c756ed2cf05050deb6cde9ef9ec51"
+    },
+    "sound": {
+      "width": 256,
+      "height": 256,
+      "meanAlpha": 93.67,
+      "transparentRatio": 0.5907,
+      "partialAlphaRatio": 0.0964,
+      "cornerAlpha": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "file": "icons/sound.png",
+      "kind": "icon",
+      "sourceCell": [
+        850,
+        850,
+        1210,
+        1190
+      ],
+      "sha256": "fbc91c3a84c8e40e07580cbac6dfec681d091d845160a5bb8a59c160a5d05897"
+    }
+  }
+}
