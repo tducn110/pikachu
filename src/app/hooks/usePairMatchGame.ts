@@ -32,7 +32,10 @@ export interface UsePairMatchGame {
   maxTime: number;
   remainingPairs: number;
   status: GameStatus;
+  loseReason: "timeout" | "no_lives" | null;
   stats: ScoreStats;
+  lives: number;
+  supportStock: { hint: number; shuffle: number; bomb: number };
   sfxEnabled: boolean;
   musicEnabled: boolean;
   setSfxEnabled: (v: boolean) => void;
@@ -43,6 +46,10 @@ export interface UsePairMatchGame {
   hintPair: () => void;
   shuffleBoard: () => void;
   bombPair: () => void;
+  addSupport: (type: "hint" | "shuffle" | "bomb") => void;
+  revive: (hearts: number) => void;
+  doubleScore: () => void;
+  setLost: (reason: "timeout" | "no_lives") => void;
 }
 
 export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = {}): UsePairMatchGame {
@@ -51,6 +58,11 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
   const board = useGameBoard();
   const [shuffleNotice, setShuffleNotice] = useState(false);
   const [wrongReason, setWrongReason] = useState<"different-kind" | "blocked-path" | null>(null);
+  const [supportStock, setSupportStock] = useState({ hint: 1, shuffle: 1, bomb: 1 });
+
+  const addSupport = useCallback((type: "hint" | "shuffle" | "bomb") => {
+    setSupportStock((prev) => ({ ...prev, [type]: prev[type] + 1 }));
+  }, []);
 
   const lockRef = useRef(false);
   const wonRef = useRef(false);
@@ -126,6 +138,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
         setWrongReason(result.reason === "different-kind" ? "different-kind" : "blocked-path");
         session.addMove();
         session.resetCombo();
+        session.removeLife();
 
         scheduleForCurrentRun(() => {
           board.setWrongIds([]);
@@ -135,7 +148,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
         }, 700);
       }
     },
-    [board.tiles, board.selectedIds, board.setActivePath, board.setHintIds, board.setSelectedIds, board.setWrongIds, board.removePair, session.status, session.level, session.combo, session.addMove, session.addScore, session.addTime, session.increaseCombo, session.resetCombo, audio.sfx, isPaused, scheduleForCurrentRun]
+    [board.tiles, board.selectedIds, board.setActivePath, board.setHintIds, board.setSelectedIds, board.setWrongIds, board.removePair, session.status, session.level, session.combo, session.addMove, session.addScore, session.addTime, session.increaseCombo, session.resetCombo, session.removeLife, audio.sfx, isPaused, scheduleForCurrentRun]
   );
 
   // Detect win or reshuffle
@@ -170,7 +183,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
   // Check loss condition
   useEffect(() => {
     if (session.status === "playing" && session.timeLeft === 0) {
-      session.setLost();
+      session.setLost("timeout");
       audio.sfx("wrong"); // Maybe add a game-over sound instead if available, 'wrong' works for now
     }
   }, [session.timeLeft, session.status, session.setLost, audio.sfx]);
@@ -180,6 +193,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     wonRef.current = false;
     setWrongReason(null);
     setShuffleNotice(false);
+    setSupportStock({ hint: 1, shuffle: 1, bomb: 1 });
     board.resetBoard(1);
     session.resetSession(false);
     audio.sfx("reset");
@@ -190,6 +204,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     wonRef.current = false;
     setWrongReason(null);
     setShuffleNotice(false);
+    setSupportStock({ hint: 1, shuffle: 1, bomb: 1 });
     board.resetBoard(session.level + 1);
     session.resetSession(true);
     audio.sfx("reset");
@@ -203,6 +218,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     const match = findAvailableMatch(board.tiles, rows, cols);
     if (match) {
       board.setHintIds([match.first.id, match.second.id]);
+      setSupportStock((prev) => ({ ...prev, hint: prev.hint - 1 }));
       session.addScore(-50); // Penalty for hint
       audio.sfx("tap");
       scheduleForCurrentRun(() => board.setHintIds([]), 1200);
@@ -232,6 +248,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
       perfDiagnostics.count("pikachu.shuffle.validationAttempts", attempts + 1);
       return nextBoard;
     }));
+    setSupportStock((prev) => ({ ...prev, shuffle: prev.shuffle - 1 }));
     session.addMove();
     audio.sfx("reset");
     lockRef.current = false;
@@ -249,6 +266,8 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     board.setHintIds([]);
     board.setActivePath(match.path);
     setWrongReason(null);
+    setSupportStock((prev) => ({ ...prev, bomb: prev.bomb - 1 }));
+    session.addScore(-200);
     session.addMove();
     audio.sfx("match");
 
@@ -257,7 +276,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
       board.setActivePath(null);
       lockRef.current = false;
     }, 400);
-  }, [board.tiles, board.setSelectedIds, board.setWrongIds, board.setHintIds, board.setActivePath, board.removePair, session.status, session.level, session.addMove, audio.sfx, isPaused, scheduleForCurrentRun]);
+  }, [board.tiles, board.setSelectedIds, board.setWrongIds, board.setHintIds, board.setActivePath, board.removePair, session.status, session.level, session.addMove, session.addScore, audio.sfx, isPaused, scheduleForCurrentRun]);
 
   return {
     tiles: board.tiles,
@@ -269,13 +288,16 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     shuffleNotice,
     score: session.score,
     level: session.level,
+    lives: session.lives,
     moves: session.moves,
     combo: session.combo,
     timeLeft: session.timeLeft,
     maxTime: session.maxTime,
     remainingPairs,
     status: session.status,
+    loseReason: session.loseReason,
     stats: session.stats,
+    supportStock,
     sfxEnabled: audio.sfxEnabled,
     musicEnabled: audio.musicEnabled,
     setSfxEnabled: audio.setSfxEnabled,
@@ -286,5 +308,9 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     hintPair,
     shuffleBoard,
     bombPair,
+    addSupport,
+    revive: session.revive,
+    doubleScore: session.doubleScore,
+    setLost: session.setLost,
   };
 }

@@ -122,6 +122,7 @@ export const GameBoard = memo(function GameBoard({
     let comboFlash: ComboFlash    | null = null;
     let screenShake: ScreenShake  | null = null;
     let boardFrame: NineSliceSprite | null = null;
+    let boardBg: Graphics | null = null;
 
     let tileAssets: CharacterTextures | null = null;
 
@@ -152,8 +153,9 @@ export const GameBoard = memo(function GameBoard({
         const { rows: currentRows, cols: currentCols } = layoutRef.current;
         // The production frame is intentionally wider than it is tall. Keep
         // the playfield square by giving the frame independent side insets.
-        const frameInsetX = Math.max(8, screenWidth * 0.075);
-        const frameInsetY = Math.max(8, screenHeight * 0.045);
+        const isMobile = screenWidth < 768;
+        const frameInsetX = Math.max(8, screenWidth * (isMobile ? 0.02 : 0.075));
+        const frameInsetY = Math.max(8, screenHeight * (isMobile ? 0.01 : 0.045));
         const tileSize   = Math.min(
           Math.max(1, (screenWidth - frameInsetX * 2) / currentCols),
           Math.max(1, (screenHeight - frameInsetY * 2) / currentRows),
@@ -165,11 +167,32 @@ export const GameBoard = memo(function GameBoard({
         const state       = stateRef.current;
 
         if (boardFrame) {
-          // The source PNG has a small transparent safety margin. Oversize
-          // the frame so its painted edge reaches the host bounds while the
-          // square playfield keeps the intended breathing room.
           boardFrame.setSize(screenWidth + 27, screenHeight + 29);
           boardFrame.position.set(screenWidth / 2 + 1.5, screenHeight / 2);
+          boardFrame.visible = !isMobile;
+        }
+
+        if (boardBg) {
+          if (isMobile) {
+            boardBg.clear();
+            const actualBoardWidth = cols * tileSize;
+            const actualBoardHeight = rows * tileSize;
+            const actualOriginX = originX + (boardWidth - actualBoardWidth) / 2;
+            const actualOriginY = originY + (boardHeight - actualBoardHeight) / 2;
+            
+            boardBg.roundRect(
+              actualOriginX - 10,
+              actualOriginY - 10,
+              actualBoardWidth + 20,
+              actualBoardHeight + 20,
+              16
+            );
+            boardBg.fill({ color: 0xfff8e1, alpha: 0.65 });
+            boardBg.stroke({ color: 0xf3a30c, width: 4 });
+            boardBg.visible = true;
+          } else {
+            boardBg.visible = false;
+          }
         }
 
         const wrongKey = state.wrongIds.join("|");
@@ -539,8 +562,11 @@ export const GameBoard = memo(function GameBoard({
         });
         boardFrame.eventMode = "none";
 
+        boardBg = new Graphics();
+        boardBg.eventMode = "none";
+
         // layer order: frame → tiles → fx → lightning
-        sceneRoot.addChild(boardFrame, tileLayer, fxLayer, lightningLayer);
+        sceneRoot.addChild(boardBg, boardFrame, tileLayer, fxLayer, lightningLayer);
         app.stage.addChild(sceneRoot);
 
         // instantiate effect systems now that stage exists

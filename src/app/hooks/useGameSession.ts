@@ -2,7 +2,8 @@ import { useState, useCallback } from "react";
 import { type ScoreStats, loadStats, saveStats } from "../utils/stats";
 import { getBoardSize, MAX_BOARD_LEVEL } from "../utils/pairMatchLogic";
 
-export type GameStatus = "playing" | "won" | "lost";
+export type GameStatus = "playing" | "won" | "lost" | "revive";
+export type LoseReason = "timeout" | "no_lives";
 
 const MAX_TIME = 90; // 90 seconds max
 
@@ -11,6 +12,7 @@ export function useGameSession() {
   const [moves, setMoves] = useState(0);
   const [combo, setCombo] = useState(0);
   const [level, setLevel] = useState(1);
+  const [lives, setLives] = useState(3);
   
   const getLevelMaxTime = (level: number) => {
   const { rows, cols } = getBoardSize(level);
@@ -23,6 +25,7 @@ export function useGameSession() {
   
   const [timeLeft, setTimeLeft] = useState(currentMaxTime);
   const [status, setStatus] = useState<GameStatus>("playing");
+  const [loseReason, setLoseReason] = useState<LoseReason | null>(null);
   const [stats, setStats] = useState<ScoreStats>(() => loadStats());
 
   const addScore = useCallback((points: number) => {
@@ -65,7 +68,8 @@ export function useGameSession() {
     });
   }, [score]);
 
-  const setLost = useCallback(() => {
+  const setLost = useCallback((reason: LoseReason) => {
+    setLoseReason(reason);
     setStatus("lost");
     setStats((prev) => {
       const updated: ScoreStats = {
@@ -77,6 +81,36 @@ export function useGameSession() {
       return updated;
     });
   }, [score]);
+  const removeLife = useCallback(() => {
+    setLives((l) => {
+      const next = Math.max(0, l - 1);
+      if (next === 0) {
+        setStatus("revive");
+      }
+      return next;
+    });
+  }, []);
+
+  const revive = useCallback((hearts: number) => {
+    setLives(hearts);
+    setStatus("playing");
+  }, []);
+
+  const doubleScore = useCallback(() => {
+    setScore((s) => {
+      const next = s * 2;
+      setStats((prev) => {
+        const updated: ScoreStats = {
+          ...prev,
+          best: Math.max(prev.best, next),
+          last: next,
+        };
+        saveStats(updated);
+        return updated;
+      });
+      return next;
+    });
+  }, []);
 
   const resetSession = useCallback((isNextLevel = false) => {
     const nextLevelNum = isNextLevel ? Math.min(level + 1, MAX_BOARD_LEVEL) : 1;
@@ -89,6 +123,8 @@ export function useGameSession() {
     }
     setMoves(0);
     setCombo(0);
+    setLives(3);
+    setLoseReason(null);
     const newMaxTime = getLevelMaxTime(nextLevelNum);
     setTimeLeft(newMaxTime);
     setStatus("playing");
@@ -99,9 +135,11 @@ export function useGameSession() {
     moves,
     combo,
     level,
+    lives,
     timeLeft,
     maxTime: currentMaxTime,
     status,
+    loseReason,
     stats,
     addScore,
     addMove,
@@ -111,6 +149,9 @@ export function useGameSession() {
     tickTime,
     setWon,
     setLost,
+    removeLife,
+    revive,
+    doubleScore,
     resetSession,
     setStatus,
   };

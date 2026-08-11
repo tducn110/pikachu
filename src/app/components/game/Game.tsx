@@ -9,14 +9,29 @@ import { WinOverlay } from "./WinOverlay";
 import { LoseOverlay } from "./LoseOverlay";
 import { WrongToast } from "./WrongToast";
 import { ShuffleToast } from "./ShuffleToast";
+import { ReviveOverlay } from "./ReviveOverlay";
+import { AdPromptOverlay } from "./AdPromptOverlay";
 import { HyperIcon, HyperTitleBar, type HyperIconName } from "./hyperUi";
 
 export function Game() {
   const [showPause, setShowPause] = useState(false);
   const [showScores, setShowScores] = useState(false);
-  const game = usePairMatchGame({ isPaused: showPause || showScores });
+  const [adPromptItem, setAdPromptItem] = useState<"hint" | "shuffle" | "bomb" | null>(null);
+  const game = usePairMatchGame({ isPaused: showPause || showScores || adPromptItem !== null });
   const boardSize = getBoardSize(game.level);
   const totalPairs = (boardSize.rows * boardSize.cols) / 2;
+
+  const handleSupportRequest = (type: "hint" | "shuffle" | "bomb", action: () => void) => {
+    if (game.supportStock[type] <= 0) {
+      setAdPromptItem(type);
+    } else {
+      action();
+    }
+  };
+
+  const doHint = () => handleSupportRequest("hint", game.hintPair);
+  const doShuffle = () => handleSupportRequest("shuffle", game.shuffleBoard);
+  const doBomb = () => handleSupportRequest("bomb", game.bombPair);
 
   return (
     <main
@@ -29,13 +44,15 @@ export function Game() {
         <section className="hyper-game-stage flex h-full min-h-0 w-full flex-col">
           <MobileGameHeader
             timeLeft={game.timeLeft}
+            maxTime={game.maxTime}
             score={game.score}
             remainingPairs={game.remainingPairs}
             totalPairs={totalPairs}
+            supportStock={game.supportStock}
             onSettings={() => setShowPause(true)}
-            onHint={game.hintPair}
-            onShuffle={game.shuffleBoard}
-            onBomb={game.bombPair}
+            onHint={doHint}
+            onShuffle={doShuffle}
+            onBomb={doBomb}
           />
 
           <div className="hyper-game-layout flex min-h-0 min-w-0 flex-1 flex-col lg:grid">
@@ -62,19 +79,19 @@ export function Game() {
                       )}
                     </div>
 
-                    <div className="hyper-hearts-panel" aria-label="2 trên 3 lượt">
-                      <HyperIcon name="heart" className="hyper-heart" />
-                      <HyperIcon name="heart" className="hyper-heart" />
-                      <HyperIcon name="heart" className="hyper-heart hyper-heart--empty" />
+                    <div className="hyper-hearts-panel" aria-label={`${game.lives} trên 3 lượt`}>
+                      {[1, 2, 3].map(i => (
+                        <HyperIcon key={i} name="heart" className={`hyper-heart ${i > game.lives ? "hyper-heart--empty" : ""}`} />
+                      ))}
                     </div>
                   </div>
 
                   <div className="hyper-sidebar-support">
                     <HyperTitleBar className="hyper-support-title">Vật phẩm hỗ trợ</HyperTitleBar>
                     <div className="hyper-support-list">
-                      <SupportButton iconName="hint" label="Gợi ý" count={3} onClick={game.hintPair} />
-                      <SupportButton iconName="shuffle" label="Đảo" count={3} onClick={game.shuffleBoard} />
-                      <SupportButton iconName="bomb" label="Bom" count={3} onClick={game.bombPair} />
+                      <SupportButton iconName="hint" label="Gợi ý" stock={game.supportStock.hint} onClick={doHint} />
+                      <SupportButton iconName="shuffle" label="Đảo" stock={game.supportStock.shuffle} onClick={doShuffle} />
+                      <SupportButton iconName="bomb" label="Bom" stock={game.supportStock.bomb} onClick={doBomb} />
                     </div>
                   </div>
 
@@ -92,26 +109,34 @@ export function Game() {
               </div>
             </aside>
 
-            <div className="hyper-board-stage flex min-h-0 min-w-0 flex-1 items-center justify-center">
-              <div className="game-board-frame">
-                <GameBoard
-                  tiles={game.tiles}
-                  selectedIds={game.selectedIds}
-                  wrongIds={game.wrongIds}
-                  hintIds={game.hintIds}
-                  activePath={game.activePath}
-                  onSelect={game.selectTile}
-                  level={game.level}
-                  combo={game.combo}
-                />
-              </div>
-
-              {game.wrongIds.length === 2 && game.wrongReason && <WrongToast reason={game.wrongReason} />}
+            <div className="relative flex h-full min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden self-stretch">
+              <GameBoard
+                tiles={game.tiles}
+                selectedIds={game.selectedIds}
+                wrongIds={game.wrongIds}
+                hintIds={game.hintIds}
+                activePath={game.activePath}
+                onSelect={game.selectTile}
+                level={game.level}
+                combo={game.combo}
+              />
+            {game.wrongIds.length === 2 && game.wrongReason && <WrongToast reason={game.wrongReason} />}
               {game.shuffleNotice && <ShuffleToast />}
               {game.status === "won" && (
-                <WinOverlay score={game.score} onNextLevel={game.nextLevel} onShowScores={() => setShowScores(true)} />
+                <WinOverlay score={game.score} onNextLevel={game.nextLevel} onShowScores={() => setShowScores(true)} game={game} />
               )}
-              {game.status === "lost" && <LoseOverlay score={game.score} onPlayAgain={game.resetGame} />}
+              {game.status === "lost" && <LoseOverlay score={game.score} onPlayAgain={game.resetGame} game={game} reason={game.loseReason} />}
+              {game.status === "revive" && <ReviveOverlay game={game} />}
+              {adPromptItem && (
+                <AdPromptOverlay
+                  itemType={adPromptItem}
+                  onConfirm={() => {
+                    game.addSupport(adPromptItem);
+                    setAdPromptItem(null);
+                  }}
+                  onCancel={() => setAdPromptItem(null)}
+                />
+              )}
             </div>
           </div>
 
@@ -168,58 +193,61 @@ function InfoItem({ icon, label, value, accent }: { icon: HyperIconName; label: 
 
 function MobileGameHeader({
   timeLeft,
+  maxTime,
   score,
   remainingPairs,
   totalPairs,
+  supportStock,
   onSettings,
   onHint,
   onShuffle,
   onBomb,
 }: {
   timeLeft: number;
+  maxTime: number;
   score: number;
   remainingPairs: number;
   totalPairs: number;
+  supportStock: { hint: number; shuffle: number; bomb: number };
   onSettings: () => void;
   onHint: () => void;
   onShuffle: () => void;
   onBomb: () => void;
 }) {
-  const progress = Math.max(0, Math.min(100, ((totalPairs - remainingPairs) / totalPairs) * 100));
+  const timeProgress = Math.max(0, Math.min(100, (timeLeft / maxTime) * 100));
 
   return (
-    <header className="game-mobile-header grid shrink-0 gap-2 pb-2 lg:hidden">
-      <div className="game-mobile-top grid grid-cols-[1fr_auto] items-center gap-2">
+    <header className="game-mobile-header flex flex-col shrink-0 gap-4 pb-4 lg:hidden">
+      <div className="game-mobile-top flex items-center justify-between gap-2">
           <HyperTitleBar className="hyper-title-bar--small">Ghép đôi</HyperTitleBar>
         <button
           type="button"
           onClick={() => { playSfx("click"); onSettings(); }}
           aria-label="Tạm dừng"
-          className="hyper-icon-button"
+          className="hyper-icon-button shrink-0"
         >
           <span className="hyper-pause-icon" style={{ fontSize: "1.2rem", color: "inherit", textShadow: "none" }} aria-hidden="true">Ⅱ</span>
         </button>
       </div>
 
       <div className="game-mobile-progress hyper-panel flex items-center gap-2 rounded-[16px] px-2.5 py-2">
-        <HyperIcon name="trophy" className="h-7 w-7 shrink-0 object-contain" />
+        <HyperIcon name="clock" className="h-7 w-7 shrink-0 object-contain" />
         <div className="h-3 min-w-0 flex-1 overflow-hidden rounded-full border border-[#d2aa6f] bg-[#f6d7a2] p-0.5">
-          <div className="h-full rounded-full bg-gradient-to-r from-[#ffbe2e] to-[#ff8a18]" style={{ width: `${progress}%` }} />
+          <div className="h-full rounded-full bg-gradient-to-r from-[#ffbe2e] to-[#ff8a18]" style={{ width: `${timeProgress}%` }} />
         </div>
-        <span className="game-mobile-inline-stat text-xs font-black text-[#8b5a22]">{timeLeft}s</span>
-        <span className="game-mobile-inline-stat text-xs font-black text-[#d97918]">{score.toLocaleString("vi-VN")}</span>
-        <span className="shrink-0 text-sm font-black text-[#8b5a22]">{totalPairs - remainingPairs} / {totalPairs}</span>
+        <span className="shrink-0 text-sm font-black text-[#8b5a22]">{timeLeft}s</span>
       </div>
 
-      <div className="game-mobile-stats grid grid-cols-2 gap-2">
-        <InfoItem icon="clock" label="Thời gian" value={`${timeLeft}s`} accent="text-[#6d3c16]" />
-        <InfoItem icon="trophy" label="Điểm" value={score.toLocaleString("vi-VN")} accent="text-[#f4771a]" />
+      <div className="game-mobile-stats flex justify-center gap-2">
+        <div className="w-2/3 min-w-[200px]">
+          <InfoItem icon="trophy" label="Điểm" value={score.toLocaleString("vi-VN")} accent="text-[#f4771a]" />
+        </div>
       </div>
 
       <div className="game-mobile-actions grid grid-cols-3 gap-2">
-        <SupportButton compact iconName="hint" label="Gợi ý" onClick={onHint} />
-        <SupportButton compact iconName="shuffle" label="Đảo" onClick={onShuffle} />
-        <SupportButton compact iconName="bomb" label="Bom" onClick={onBomb} />
+        <SupportButton compact iconName="hint" label="Gợi ý" stock={supportStock.hint} onClick={onHint} />
+        <SupportButton compact iconName="shuffle" label="Đảo" stock={supportStock.shuffle} onClick={onShuffle} />
+        <SupportButton compact iconName="bomb" label="Bom" stock={supportStock.bomb} onClick={onBomb} />
       </div>
     </header>
   );
@@ -228,13 +256,13 @@ function MobileGameHeader({
 function SupportButton({
   iconName,
   label,
-  count = 3,
+  stock = 0,
   onClick,
   compact = false,
 }: {
   iconName: HyperIconName;
   label: string;
-  count?: number;
+  stock?: number;
   onClick: () => void;
   compact?: boolean;
 }) {
@@ -246,8 +274,10 @@ function SupportButton({
       className={`hyper-support-button ${compact ? "hyper-support-button--compact" : ""}`}
     >
       <HyperIcon name={iconName} className="hyper-support-icon" />
-      <span className="hyper-support-label">{label}</span>
-      <span className="hyper-support-counter" aria-hidden="true">×{count}</span>
+      {!compact && <span className="hyper-support-label">{label}</span>}
+      <span className={`hyper-support-counter ${stock > 0 ? 'hyper-support-counter--has-stock' : ''}`} aria-hidden="true">
+        x{stock}
+      </span>
     </button>
   );
 }

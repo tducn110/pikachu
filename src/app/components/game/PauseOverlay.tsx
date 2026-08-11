@@ -2,6 +2,8 @@ import React from "react";
 import { Play, RotateCcw } from "lucide-react";
 import { playSfx } from "../../utils/audio";
 import { HyperIcon } from "./hyperUi";
+import { HyperModal } from "./overlays/HyperModal";
+import { HyperModalButton } from "./ui/HyperModalButton";
 
 export function PauseOverlay({
   onClose,
@@ -19,64 +21,55 @@ export function PauseOverlay({
   setMusicEnabled: (v: boolean) => void;
 }) {
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Tạm dừng"
-      className="hyper-modal-backdrop hyper-modal-backdrop--pause"
-      onClick={onClose}
-    >
-      <div
-        className="hyper-modal hyper-modal--pause"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="hyper-modal-inner hyper-modal-inner--pause flex flex-col items-center">
-          <h2 className="hyper-pause-title">TẠM DỪNG</h2>
-          
-          <button 
-            className="hyper-pause-continue" 
-            onClick={() => { playSfx("click"); onClose(); }}
-          >
-            <Play className="hyper-pause-continue-icon" fill="currentColor" size={28} />
-            <span>Tiếp tục</span>
-          </button>
+    <HyperModal offsetTop>
+      <h2 className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-6 mt-2 shadow-text">
+        TẠM DỪNG
+      </h2>
 
-          <div className="hyper-pause-actions">
-            <button 
-              className="hyper-pause-action-btn" 
-              onClick={() => { playSfx("click"); onRestart(); onClose(); }}
-              aria-label="Chơi lại"
-            >
-              <div className="hyper-pause-action-icon-wrap">
-                <RotateCcw size={28} strokeWidth={2.5} />
-              </div>
-              <span>Chơi lại</span>
-            </button>
-
-            <button 
-              className={`hyper-pause-action-btn ${!sfxEnabled ? 'off' : ''}`}
-              onClick={() => { playSfx("toggle"); setSfxEnabled(!sfxEnabled); }}
-              aria-label="Âm thanh"
-            >
-              <div className="hyper-pause-action-icon-wrap">
-                <HyperIcon name="sound" className="h-4/5 w-4/5 object-contain" />
-              </div>
-              <span>Âm thanh</span>
-            </button>
-
-            <button 
-              className={`hyper-pause-action-btn ${!musicEnabled ? 'off' : ''}`}
-              onClick={() => { playSfx("toggle"); setMusicEnabled(!musicEnabled); }}
-              aria-label="Nhạc"
-            >
-              <div className="hyper-pause-action-icon-wrap">
-                <HyperIcon name="music" className="h-4/5 w-4/5 object-contain" />
-              </div>
-              <span>Nhạc</span>
-            </button>
+      <div className="w-full mb-4">
+        <HyperModalButton 
+          onClick={() => { playSfx("click"); onClose(); }} 
+          variant="primary"
+          className="py-4"
+        >
+          <div className="flex items-center gap-2">
+            <Play className="fill-white" size={24} />
+            <span className="text-xl">TIẾP TỤC</span>
           </div>
-        </div>
+        </HyperModalButton>
       </div>
-    </div>
+
+      <div className="flex w-full justify-between gap-4 mt-2 px-2">
+        <button 
+          className="flex flex-col items-center gap-1 opacity-90 hover:opacity-100 transition-transform active:scale-95"
+          onClick={() => { playSfx("click"); onRestart(); onClose(); }}
+        >
+          <div className="w-14 h-14 rounded-full bg-[var(--hyper-gold)] flex items-center justify-center shadow-lg border-2 border-[var(--hyper-brown)]">
+            <RotateCcw size={26} strokeWidth={3} className="text-[var(--hyper-brown)]" />
+          </div>
+          <span className="text-[var(--hyper-purple-ink)] font-bold text-sm">Chơi lại</span>
+        </button>
+
+        <button 
+          className={`flex flex-col items-center gap-1 transition-transform active:scale-95 ${!sfxEnabled ? 'opacity-50 grayscale' : 'opacity-90 hover:opacity-100'}`}
+          onClick={() => { playSfx("toggle"); setSfxEnabled(!sfxEnabled); }}
+        >
+          <div className="w-14 h-14 rounded-full bg-[var(--hyper-gold)] flex items-center justify-center shadow-lg border-2 border-[var(--hyper-brown)]">
+            <HyperIcon name="sound" className="w-8 h-8 drop-shadow-sm" />
+          </div>
+          <span className="text-[var(--hyper-purple-ink)] font-bold text-sm">Âm thanh</span>
+        </button>
+
+        <button 
+          className={`flex flex-col items-center gap-1 transition-transform active:scale-95 ${!musicEnabled ? 'opacity-50 grayscale' : 'opacity-90 hover:opacity-100'}`}
+          onClick={() => { playSfx("toggle"); setMusicEnabled(!musicEnabled); }}
+        >
+          <div className="w-14 h-14 rounded-full bg-[var(--hyper-gold)] flex items-center justify-center shadow-lg border-2 border-[var(--hyper-brown)]">
+            <HyperIcon name="music" className="w-8 h-8 drop-shadow-sm" />
+          </div>
+          <span className="text-[var(--hyper-purple-ink)] font-bold text-sm">Nhạc</span>
+        </button>
+      </div>
+    </HyperModal>
   );
 }
