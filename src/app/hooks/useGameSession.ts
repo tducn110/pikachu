@@ -13,9 +13,11 @@ export function useGameSession() {
   const [combo, setCombo] = useState(0);
   const [level, setLevel] = useState(1);
   const [lives, setLives] = useState(3);
+  const [hasRevived, setHasRevived] = useState(false);
   
   const getLevelMaxTime = (level: number) => {
-  const { rows, cols } = getBoardSize(level);
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+  const { rows, cols } = getBoardSize(level, isMobile);
   const pairs = (rows * cols) / 2;
   // Dynamic time scaling based on number of pairs and level
   return Math.max(45, Math.floor(pairs * 3) + Math.max(0, 30 - level));
@@ -85,14 +87,21 @@ export function useGameSession() {
     setLives((l) => {
       const next = Math.max(0, l - 1);
       if (next === 0) {
-        setStatus("revive");
+        if (hasRevived) {
+          setTimeout(() => {
+            setLost("no_lives");
+          }, 0);
+        } else {
+          setStatus("revive");
+        }
       }
       return next;
     });
-  }, []);
+  }, [hasRevived, setLost]);
 
   const revive = useCallback((hearts: number) => {
     setLives(hearts);
+    setHasRevived(true);
     setStatus("playing");
   }, []);
 
@@ -125,6 +134,7 @@ export function useGameSession() {
     setCombo(0);
     setLives(3);
     setLoseReason(null);
+    setHasRevived(false);
     const newMaxTime = getLevelMaxTime(nextLevelNum);
     setTimeLeft(newMaxTime);
     setStatus("playing");

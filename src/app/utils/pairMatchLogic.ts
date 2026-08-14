@@ -9,13 +9,29 @@ export interface PairTile {
   removed: boolean;
 }
 
-export const BOARD_SIZES = [8, 10, 12, 14, 16] as const;
-export const MAX_BOARD_LEVEL = BOARD_SIZES.length;
+export const BOARD_SIZES_DESKTOP = [8, 10, 12, 14, 16] as const;
+export const MAX_BOARD_LEVEL = BOARD_SIZES_DESKTOP.length;
 
-export function getBoardSize(level: number) {
-  // The final 16×16 board repeats as the documented endless challenge.
-  const size = BOARD_SIZES[Math.min(Math.max(level, 1), MAX_BOARD_LEVEL) - 1];
-  return { rows: size, cols: size };
+export const BOARD_SIZES_MOBILE = [
+  { cols: 5, rows: 6 }, // 30
+  { cols: 5, rows: 8 }, // 40
+  { cols: 6, rows: 7 }, // 42
+  { cols: 6, rows: 8 }, // 48
+  { cols: 7, rows: 8 }, // 56
+  { cols: 7, rows: 10 }, // 70
+  { cols: 8, rows: 10 }, // 80
+] as const;
+
+export function getBoardSize(level: number, isMobile = false) {
+  if (isMobile) {
+    // 2 levels per size
+    const sizeIndex = Math.max(0, Math.floor((level - 1) / 2));
+    const maxIndex = BOARD_SIZES_MOBILE.length - 1;
+    return BOARD_SIZES_MOBILE[Math.min(sizeIndex, maxIndex)];
+  } else {
+    const size = BOARD_SIZES_DESKTOP[Math.min(Math.max(level, 1), MAX_BOARD_LEVEL) - 1];
+    return { rows: size, cols: size };
+  }
 }
 
 export function mulberry32(seed: number): () => number {
@@ -73,7 +89,7 @@ export function createPairBoard(
   if (typeof characterIdsOrLevel === "number") {
     const level = characterIdsOrLevel;
     const legacySeed = rowsOrSeed;
-    const { rows: r, cols: c } = getBoardSize(level);
+    const { rows: r, cols: c } = getBoardSize(level, false);
     // Fallback: generate placeholder kinds until GameBoard provides real catalog
     const fallbackKinds: string[] = [];
     for (let i = 0; i < 20; i++) fallbackKinds.push(`legacy:${String(i + 1).padStart(2, "0")}`);

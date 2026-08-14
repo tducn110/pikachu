@@ -43,7 +43,8 @@ export function WinOverlay({
         {displayScore}
       </div>
 
-      <div className="flex w-full gap-3 mt-auto">
+      <div className="flex flex-col sm:flex-row w-full gap-3 mt-auto">
+
         {!doubleClaimed && (
           <div className="flex-1">
             <RewardAdButton 
@@ -53,7 +54,7 @@ export function WinOverlay({
             />
           </div>
         )}
-        <div className={doubleClaimed ? "w-full flex gap-3" : "flex-1 flex flex-col gap-3"}>
+        <div className={doubleClaimed ? "w-full flex flex-col sm:flex-row gap-3" : "flex-1 flex flex-col gap-3"}>
           <HyperModalButton onClick={onNextLevel} variant="secondary" className="flex-1">
             TIẾP TỤC
           </HyperModalButton>

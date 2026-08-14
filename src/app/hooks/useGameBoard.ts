@@ -31,7 +31,8 @@ export function resolveCharacterIds(
 
 export function useGameBoard(initialLevel: number = 1, characterIds: readonly string[] = []) {
   const [tiles, setTiles] = useState<PairTile[]>(() => {
-    const { rows, cols } = getBoardSize(initialLevel);
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+    const { rows, cols } = getBoardSize(initialLevel, isMobile);
     return createPairBoard(resolveCharacterIds(undefined, characterIds), rows, cols);
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -40,7 +41,8 @@ export function useGameBoard(initialLevel: number = 1, characterIds: readonly st
   const [activePath, setActivePath] = useState<Point[] | null>(null);
 
   const resetBoard = useCallback((level: number, ids?: readonly string[]) => {
-    const { rows, cols } = getBoardSize(level);
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+    const { rows, cols } = getBoardSize(level, isMobile);
     setTiles(createPairBoard(resolveCharacterIds(ids, characterIds), rows, cols));
     setSelectedIds([]);
     setWrongIds([]);

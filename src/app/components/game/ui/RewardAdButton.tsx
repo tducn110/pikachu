@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { requestRewardedAd, RewardType } from "../../../utils/ads";
 import { HyperModalButton } from "./HyperModalButton";
-import { Play } from "lucide-react";
+import { MonitorPlay } from "lucide-react";
 
 interface RewardAdButtonProps {
   rewardType: RewardType;
@@ -27,7 +27,7 @@ export function RewardAdButton({ rewardType, onSuccess, label, subLabel }: Rewar
     <HyperModalButton onClick={handleClick} variant="primary" disabled={loading} className="hyper-reward-btn">
       <div className="flex flex-col items-center justify-center w-full relative">
         <div className="flex items-center gap-2 font-bold text-white text-lg tracking-wide uppercase shadow-text">
-          <Play className="w-5 h-5 fill-white" />
+          <MonitorPlay className="w-5 h-5 fill-white" />
           {loading ? "ĐANG TẢI..." : label}
         </div>
         {subLabel && !loading && (

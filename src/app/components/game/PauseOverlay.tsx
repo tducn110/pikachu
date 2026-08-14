@@ -1,5 +1,5 @@
 import React from "react";
-import { Play, RotateCcw } from "lucide-react";
+import { Play, RotateCcw, Volume2, VolumeX, Music } from "lucide-react";
 import { playSfx } from "../../utils/audio";
 import { HyperIcon } from "./hyperUi";
 import { HyperModal } from "./overlays/HyperModal";
@@ -33,13 +33,13 @@ export function PauseOverlay({
           className="py-4"
         >
           <div className="flex items-center gap-2">
-            <Play className="fill-white" size={24} />
+            <Play size={24} strokeWidth={3} />
             <span className="text-xl">TIẾP TỤC</span>
           </div>
         </HyperModalButton>
       </div>
 
-      <div className="flex w-full justify-between gap-4 mt-2 px-2">
+      <div className="flex w-full justify-center sm:justify-between gap-3 sm:gap-4 mt-2 px-0 sm:px-2">
         <button 
           className="flex flex-col items-center gap-1 opacity-90 hover:opacity-100 transition-transform active:scale-95"
           onClick={() => { playSfx("click"); onRestart(); onClose(); }}
@@ -55,7 +55,11 @@ export function PauseOverlay({
           onClick={() => { playSfx("toggle"); setSfxEnabled(!sfxEnabled); }}
         >
           <div className="w-14 h-14 rounded-full bg-[var(--hyper-gold)] flex items-center justify-center shadow-lg border-2 border-[var(--hyper-brown)]">
-            <HyperIcon name="sound" className="w-8 h-8 drop-shadow-sm" />
+            {sfxEnabled ? (
+              <Volume2 size={26} strokeWidth={3} className="text-[var(--hyper-brown)]" />
+            ) : (
+              <VolumeX size={26} strokeWidth={3} className="text-[var(--hyper-brown)]" />
+            )}
           </div>
           <span className="text-[var(--hyper-purple-ink)] font-bold text-sm">Âm thanh</span>
         </button>
@@ -65,7 +69,7 @@ export function PauseOverlay({
           onClick={() => { playSfx("toggle"); setMusicEnabled(!musicEnabled); }}
         >
           <div className="w-14 h-14 rounded-full bg-[var(--hyper-gold)] flex items-center justify-center shadow-lg border-2 border-[var(--hyper-brown)]">
-            <HyperIcon name="music" className="w-8 h-8 drop-shadow-sm" />
+            <Music size={26} strokeWidth={3} className="text-[var(--hyper-brown)]" />
           </div>
           <span className="text-[var(--hyper-purple-ink)] font-bold text-sm">Nhạc</span>
         </button>

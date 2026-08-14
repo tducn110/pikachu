@@ -30,7 +30,7 @@ export function LoseOverlay({
     setDoubleClaimed(true);
   };
 
-  const title = reason === "timeout" ? "HẾT THỜI GIAN!" : "HẾT TIM!";
+  const title = reason === "timeout" ? "HẾT THỜI GIAN!" : "BẠN ĐÃ THUA!";
   const icon = reason === "timeout" ? "clock" : "heart";
 
   return (
@@ -51,7 +51,7 @@ export function LoseOverlay({
         {displayScore}
       </div>
 
-      <div className="flex w-full gap-3 mt-auto">
+      <div className="flex flex-col sm:flex-row w-full gap-3 mt-auto">
         {!doubleClaimed && (
           <div className="flex-1">
             <RewardAdButton 

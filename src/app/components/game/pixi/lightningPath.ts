@@ -23,12 +23,12 @@ import gsap from "gsap";
 import type { Point } from "../../../utils/pairMatchLogic";
 
 // ─── tunables ────────────────────────────────────────────────────────────────
-const ZIGZAG_SEGS   = 7;      // sub-segments per straight segment
-const ZIGZAG_AMP    = 0.30;   // jitter amplitude as fraction of segment length
-const FLICKER_MS    = 40;     // ms between zigzag re-rolls
-const BOLT_HOLD     = 0.20;   // seconds the bolt stays at full brightness
-const FADE_IN       = 0.06;   // seconds fade-in
-const FADE_OUT      = 0.14;   // seconds fade-out
+const ZIGZAG_SEGS   = 3;      // sub-segments per straight segment
+const ZIGZAG_AMP    = 0.04;   // very subtle jitter to keep the path clear
+const FLICKER_MS    = 30;     // faster flicker for energy
+const BOLT_HOLD     = 0.15;   // snappy, decisive hold
+const FADE_IN       = 0.03;   // almost instant flash in
+const FADE_OUT      = 0.10;   // fast fade-out
 
 // colours
 const CORONA_COLOR  = 0xff8c2f;   // warm orange (orangeCta)
@@ -199,10 +199,10 @@ export function createLightningBolt(parent: Container): LightningBolt {
 
   function renderLines(): void {
     if (!container.visible || zigPts.length < 2) return;
-    const w = Math.max(2, currentTS * 0.13);
-    strokePolyline(haloLine,  zigPts, SECONDARY_CLR, w * 5.5, 0.12);
-    strokePolyline(glowLine,  zigPts, CORONA_COLOR,  w * 3.2, 0.30);
-    strokePolyline(coreLine,  zigPts, CORE_COLOR,    w * 0.85, 0.96);
+    const w = Math.max(2, currentTS * 0.12);
+    strokePolyline(haloLine,  zigPts, SECONDARY_CLR, w * 3.0, 0.15); // Slightly stronger halo
+    strokePolyline(glowLine,  zigPts, CORONA_COLOR,  w * 1.8, 0.60); // Punchy, bright glow
+    strokePolyline(coreLine,  zigPts, CORE_COLOR,    w * 1.2, 1.0);  // Thicker, decisive core
     drawNodes(nodeDots, waypoints, currentTS);
   }
 

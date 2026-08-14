@@ -74,7 +74,9 @@ export const GameBoard = memo(function GameBoard({
   combo,
 }: Props) {
   perfDiagnostics.count("react.gameBoardRender");
-  const { rows, cols } = getBoardSize(level);
+  // Recalculate layout based on current tiles/level and container size
+  const isMobileSize = typeof window !== "undefined" && window.innerWidth < 1024;
+  const { rows, cols } = getBoardSize(level, isMobileSize);
   const hostRef = useRef<HTMLDivElement>(null);
   const onSelectRef = useRef(onSelect);
   const layoutRef = useRef({ rows, cols });
@@ -153,9 +155,9 @@ export const GameBoard = memo(function GameBoard({
         const { rows: currentRows, cols: currentCols } = layoutRef.current;
         // The production frame is intentionally wider than it is tall. Keep
         // the playfield square by giving the frame independent side insets.
-        const isMobile = screenWidth < 768;
-        const frameInsetX = Math.max(8, screenWidth * (isMobile ? 0.02 : 0.075));
-        const frameInsetY = Math.max(8, screenHeight * (isMobile ? 0.01 : 0.045));
+        const isMobile = screenWidth < 1024;
+        const frameInsetX = isMobile ? Math.max(4, screenWidth * 0.01) : Math.max(8, screenWidth * 0.075);
+        const frameInsetY = isMobile ? Math.max(4, screenHeight * 0.01) : Math.max(8, screenHeight * 0.045);
         const tileSize   = Math.min(
           Math.max(1, (screenWidth - frameInsetX * 2) / currentCols),
           Math.max(1, (screenHeight - frameInsetY * 2) / currentRows),
@@ -167,32 +169,15 @@ export const GameBoard = memo(function GameBoard({
         const state       = stateRef.current;
 
         if (boardFrame) {
-          boardFrame.setSize(screenWidth + 27, screenHeight + 29);
-          boardFrame.position.set(screenWidth / 2 + 1.5, screenHeight / 2);
-          boardFrame.visible = !isMobile;
+          const framePaddingX = Math.max(18, tileSize * (isMobile ? 0.24 : 0.6));
+          const framePaddingY = Math.max(18, tileSize * (isMobile ? 0.24 : 0.5));
+          boardFrame.setSize(boardWidth + framePaddingX * 2, boardHeight + framePaddingY * 2);
+          boardFrame.position.set(originX + boardWidth / 2, originY + boardHeight / 2);
+          boardFrame.visible = false;
         }
 
         if (boardBg) {
-          if (isMobile) {
-            boardBg.clear();
-            const actualBoardWidth = cols * tileSize;
-            const actualBoardHeight = rows * tileSize;
-            const actualOriginX = originX + (boardWidth - actualBoardWidth) / 2;
-            const actualOriginY = originY + (boardHeight - actualBoardHeight) / 2;
-            
-            boardBg.roundRect(
-              actualOriginX - 10,
-              actualOriginY - 10,
-              actualBoardWidth + 20,
-              actualBoardHeight + 20,
-              16
-            );
-            boardBg.fill({ color: 0xfff8e1, alpha: 0.65 });
-            boardBg.stroke({ color: 0xf3a30c, width: 4 });
-            boardBg.visible = true;
-          } else {
-            boardBg.visible = false;
-          }
+          boardBg.visible = false;
         }
 
         const wrongKey = state.wrongIds.join("|");

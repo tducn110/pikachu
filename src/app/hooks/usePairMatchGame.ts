@@ -110,7 +110,8 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
       const [firstId, secondId] = next;
       const a = board.tiles.find((t) => t.id === firstId)!;
       const b = board.tiles.find((t) => t.id === secondId)!;
-      const { rows, cols } = getBoardSize(session.level);
+      const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+      const { rows, cols } = getBoardSize(session.level, isMobile);
       const result = perfDiagnostics.measure("pikachu.path.find", () =>
         evaluatePairMatch(board.tiles, a, b, rows, cols),
       );
@@ -160,7 +161,8 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
         audio.sfx("win");
         session.setWon();
       } else {
-        const { rows, cols } = getBoardSize(session.level);
+        const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+        const { rows, cols } = getBoardSize(session.level, isMobile);
         const boardChanged = board.shuffleIfNoMatch(rows, cols);
         if (boardChanged) {
           setShuffleNotice(true);
@@ -214,7 +216,8 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     if (session.status !== "playing" || lockRef.current || isPaused) return;
     perfDiagnostics.count("pikachu.hint.calls");
     const scanStartedAt = perfDiagnostics.start("pikachu.hint.scan");
-    const { rows, cols } = getBoardSize(session.level);
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+    const { rows, cols } = getBoardSize(session.level, isMobile);
     const match = findAvailableMatch(board.tiles, rows, cols);
     if (match) {
       board.setHintIds([match.first.id, match.second.id]);
@@ -231,7 +234,8 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
   const shuffleBoard = useCallback(() => {
     if (session.status !== "playing" || lockRef.current || isPaused) return;
     perfDiagnostics.count("pikachu.shuffle.calls");
-    const { rows, cols } = getBoardSize(session.level);
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+    const { rows, cols } = getBoardSize(session.level, isMobile);
     lockRef.current = true;
     board.setSelectedIds([]);
     board.setWrongIds([]);
@@ -256,7 +260,8 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
 
   const bombPair = useCallback(() => {
     if (session.status !== "playing" || lockRef.current || isPaused) return;
-    const { rows, cols } = getBoardSize(session.level);
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+    const { rows, cols } = getBoardSize(session.level, isMobile);
     const match = findAvailableMatch(board.tiles, rows, cols);
     if (!match) return;
 

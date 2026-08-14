@@ -222,6 +222,7 @@
   border-radius: 28px;
   padding: 0;
   margin: 0 auto;
+  overflow: visible;
 }
 
 .hyper-support-button--compact .hyper-support-icon {
@@ -240,10 +241,13 @@
 }
 
 .hyper-support-button--compact .hyper-support-counter {
-  right: 4px;
-  width: 20px; min-width: 20px; padding: 0;
-  height: 20px;
-  font-size: 0.56rem;
+  right: -6px;
+  top: auto;
+  bottom: -4px;
+  transform: none;
+  width: 22px; min-width: 22px; padding: 0;
+  height: 22px;
+  font-size: 0.6rem;
 }
 
 .hyper-info-row {
@@ -575,6 +579,20 @@
   display: none;
 }
 
+.hyper-main-frame {
+  position: relative;
+  display: flex;
+  width: 100%;
+  border: 20px solid transparent;
+  border-right-width: 12px;
+  border-left-width: 12px;
+  border-image-source: url("/hyper-ui/surfaces/panel-frame.png");
+  border-image-slice: 96 101 fill;
+  border-image-width: 20px 12px;
+  border-image-repeat: stretch;
+  filter: drop-shadow(0 15px 25px rgba(90, 45, 10, 0.4));
+}
+
 @media (min-width: 1024px) {
   .hyper-game-root {
     padding: 18px 0 12px;
@@ -585,20 +603,34 @@
   }
 
   .hyper-game-stage {
-    width: min(100%, 1376px);
-    max-width: 1376px;
+    width: 100%;
+    max-width: none;
+    position: relative;
     overflow: visible;
   }
 
+  .hyper-main-frame {
+    max-width: 1100px;
+    height: 85vh;
+    max-height: 850px;
+    border-width: 56px 45px;
+    border-image-width: 56px 45px;
+  }
+
   .hyper-game-layout {
-    grid-template-columns: minmax(340px, 400px) minmax(0, 1fr);
-    gap: 0;
+    width: 100%;
+    height: 100%;
+    grid-template-columns: 240px minmax(0, 1fr);
+    align-items: stretch;
+    justify-content: center;
+    gap: 16px;
+    padding: 10px;
   }
 
   .hyper-sidebar {
     height: 100%;
     align-self: stretch;
-    padding-left: 98px;
+    padding-left: 0;
     overflow: visible;
   }
 
@@ -606,22 +638,11 @@
     display: block;
     width: 100%;
     height: 100%;
-    filter: drop-shadow(0 10px 11px rgba(90, 45, 10, 0.22));
+    filter: none;
   }
 
   .hyper-sidebar-frame::before {
-    position: absolute;
-    z-index: 0;
-    inset: -12px -3px -12px -9px;
-    border: 56px solid transparent;
-    border-right-width: 45px;
-    border-left-width: 45px;
-    border-image-source: url("/hyper-ui/surfaces/panel-frame.png");
-    border-image-slice: 96 101 fill;
-    border-image-width: 56px 45px;
-    border-image-repeat: stretch;
-    content: "";
-    pointer-events: none;
+    display: none;
   }
 
   .hyper-sidebar-content {
@@ -647,7 +668,7 @@
 
   .hyper-sidebar-support {
     align-self: center;
-    width: min(100%, 292px);
+    width: min(100%, 262px);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -665,8 +686,8 @@
   .hyper-score-card {
     position: relative;
     display: flex;
-    width: 248px;
-    height: 88px;
+    width: min(248px, 100%);
+    height: 8.55vh;
     flex: none;
     flex-direction: column;
     align-items: center;
@@ -685,11 +706,11 @@
     position: absolute;
     top: -18px;
     left: 50%;
-    width: 144px;
-    min-height: 38px;
+    width: 58%;
+    min-height: 3.7vh;
     transform: translateX(-50%);
     padding-inline: 1.5rem;
-    font-size: 0.88rem;
+    font-size: 1.65vh;
   }
 
   .hyper-score-total {
@@ -697,7 +718,7 @@
     border: 0;
     padding: 0;
     color: #7926bc;
-    font-size: clamp(1.72rem, 2.1vw, 2.1rem);
+    font-size: 3.1vh;
     font-weight: 900;
     line-height: 1;
     letter-spacing: 0;
@@ -735,12 +756,12 @@
 
   .hyper-hearts-panel {
     display: flex;
-    width: 248px;
-    height: 52px;
+    width: min(248px, 100%);
+    height: 5.05vh;
     flex: none;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 0.45vw;
     margin-top: 6px;
     margin-inline: auto;
     border: 3px solid #f2a00a;
@@ -753,8 +774,8 @@
   }
 
   .hyper-heart {
-    width: 38px;
-    height: 38px;
+    width: 3.7vh;
+    height: 3.7vh;
     object-fit: contain;
     filter: drop-shadow(0 2px 2px rgba(137, 30, 16, 0.22));
   }
@@ -766,11 +787,11 @@
 
   .hyper-support-title {
     width: 100%;
-    height: 52px;
-    min-height: 52px;
+    height: 5.05vh;
+    min-height: 5.05vh;
     margin: 0 auto;
     padding-inline: 1.2rem;
-    font-size: 1.05rem;
+    font-size: 2vh;
     font-weight: 800;
     display: flex;
     align-items: center;
@@ -780,23 +801,23 @@
   .hyper-support-list {
     display: grid;
     width: 100%;
-    grid-template-rows: repeat(3, 70px);
-    gap: 9px;
-    margin-top: 8px;
+    grid-template-rows: repeat(3, 6.8vh);
+    gap: 0.85vh;
+    margin-top: 0.8vh;
   }
 
   .hyper-support-list .hyper-support-button {
     width: 100%;
-    min-height: 70px;
-    height: 70px;
+    min-height: 6.8vh;
+    height: 6.8vh;
     border-radius: 36px;
-    padding: 0.35rem 3rem 0.35rem 0.5rem;
+    padding: 0.35rem 2.2vh 0.35rem 0.5rem;
   }
 
   .hyper-support-list .hyper-support-icon {
-    width: 48px;
-    height: 48px;
-    flex: 0 0 48px;
+    width: 4.7vh;
+    height: 4.7vh;
+    flex: 0 0 4.7vh;
     aspect-ratio: 1 / 1;
     flex-shrink: 0;
     align-self: center;
@@ -808,7 +829,7 @@
     align-items: center;
     min-width: 0;
     padding-left: 8px;
-    font-size: 0.96rem;
+    font-size: 1.75vh;
     font-weight: 900;
     line-height: 1;
   }
@@ -817,8 +838,8 @@
 
   .hyper-pause-orb {
     position: relative;
-    width: 56px;
-    height: 56px;
+    width: 5.45vh;
+    height: 5.45vh;
     display: grid;
     place-items: center;
     margin: 0;
@@ -846,13 +867,37 @@
   }
 
   .hyper-pause-orb:focus-visible {
-    outline: 3px solid rgba(180, 140, 255, 0.75);
-    outline-offset: 3px;
+    outline: 2px solid #ffbd19;
+    outline-offset: 2px;
+  }
+
+  .hyper-pause-orb-mobile {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: 2px solid #ffbd19;
+    border-radius: 50%;
+    background: radial-gradient(circle at 36% 28%, #8f43d4, #57209b 64%, #3c116f);
+    box-shadow:
+      0 0 0 1px #c89aff,
+      0 0 0 2px #44108e,
+      inset 0 2px 3px rgba(255, 255, 255, 0.42),
+      inset 0 -2px 3px rgba(48, 10, 90, 0.25),
+      0 4px 6px rgba(65, 20, 110, 0.28);
+    cursor: pointer;
+    color: #fff;
+  }
+  .hyper-pause-orb-mobile .hyper-pause-icon {
+    font-size: 1rem;
+    font-weight: 900;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
   }
 
   .hyper-pause-icon {
     color: #fff4d7;
-    font-size: 1.45rem;
+    font-size: 2.7vh;
     font-weight: 900;
     line-height: 1;
     text-shadow: 0 2px 0 rgba(48, 12, 84, 0.72);
@@ -863,11 +908,11 @@
   .hyper-timer {
     position: absolute;
     z-index: 4;
-    top: 106px;
-    bottom: 112px;
-    left: 56px;
+    top: 10%;
+    bottom: 10%;
+    left: -35px;
     display: block;
-    width: 58px;
+    width: 30px;
     height: auto;
     max-height: none;
     pointer-events: none;
@@ -878,10 +923,10 @@
     position: absolute;
     z-index: 3;
     top: 0;
-    left: 4px;
+    left: 0.4vh;
     display: grid;
-    width: 46px;
-    height: 46px;
+    width: 4.5vh;
+    height: 4.5vh;
     place-items: center;
     border: 3px solid #f6ac0d;
     border-radius: 50%;
@@ -890,18 +935,18 @@
   }
 
   .hyper-timer-clock img {
-    width: 36px;
-    height: 36px;
+    width: 3.5vh;
+    height: 3.5vh;
     object-fit: contain;
   }
 
   .hyper-timer-track {
     position: absolute;
     z-index: 1;
-    top: 35px;
+    top: 3.4vh;
     bottom: 0;
-    left: 13px;
-    width: 28px;
+    left: 1.25vh;
+    width: 2.75vh;
     overflow: hidden;
     border: 3px solid #f5a40b;
     border-radius: 14px;
@@ -924,6 +969,7 @@
 
   .hyper-board-stage {
     height: 100%;
+    min-width: 0;
     align-self: stretch;
   }
 
@@ -939,24 +985,34 @@
 @keyframes hyper-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes hyper-modal-in { from { opacity: 0; transform: translateY(8px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-/* ── Board / sidebar junction: soften the double-border feel ── */
-@media (min-width: 1024px) {
-  /* The sidebar frame ::before already draws the panel border.
-     Trim any visible left border on the board stage so the edge reads as one seam. */
-  .hyper-board-stage {
-    border-left: 0;
-  }
-
-  /* Sidebar outer: reduce right-side apparent border thickness */
-  .hyper-sidebar-frame::before {
-    /* reduce right slice slightly so it doesn't stack visually with board frame */
-    border-right-width: 34px;
-  }
-}
-
 @media (max-width: 639px) {
   .hyper-title-bar { min-height: 42px; padding-inline: 1.75rem; font-size: 0.78rem; }
   .hyper-panel { border-radius: 18px; }
+  .hyper-support-button--mini {
+    justify-content: center;
+    min-height: 40px;
+    width: 40px;
+    border-radius: 20px;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+  }
+
+  .hyper-support-button--mini .hyper-support-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .hyper-support-button--mini .hyper-support-counter {
+    right: -4px;
+    top: auto;
+    bottom: -2px;
+    transform: none;
+    width: 18px; min-width: 18px; padding: 0;
+    height: 18px;
+    font-size: 0.5rem;
+  }
+
   .hyper-info-row { min-height: 52px; padding-left: 3rem; }
   .hyper-info-icon { width: 2.7rem; height: 2.7rem; }
   .hyper-progress-frame { width: min(42vw, 9rem); }
@@ -1146,13 +1202,19 @@
     0 12px 32px rgba(30, 10, 50, 0.4),
     inset 0 4px 0 rgba(255, 255, 255, 0.6),
     inset 0 -6px 0 rgba(189, 104, 16, 0.15);
-  padding: 28px 32px;
+  padding: 24px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center; white-space: nowrap;
+  text-align: center;
   position: relative;
   overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  .hyper-modal-v2 {
+    padding: 28px 32px;
+  }
 }
 
 .hyper-modal-btn {

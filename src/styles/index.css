@@ -1,4 +1,5 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+@import './background-layout.generated.css';
 @import './hyper-ui.css';
