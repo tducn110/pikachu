@@ -3,7 +3,7 @@ import { type Sfx, type UiSound, playSfx, setSfxEnabled as setAudioSfxEnabled, t
 
 export function useGameAudio() {
   const [sfxEnabled, setSfxEnabled] = useState(true);
-  const [musicEnabled, setMusicEnabled] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(true);
 
   useEffect(() => {
     setAudioSfxEnabled(sfxEnabled);

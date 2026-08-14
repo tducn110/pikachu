@@ -26,7 +26,7 @@ const SFX_VOLUME: Record<Sfx | UiSound, number> = {
 };
 
 const BGM_SOURCE = "/BGMM_Lofi2.mp3";
-const BGM_VOLUME = 0.18;
+const BGM_VOLUME = 0.35;
 
 let sfxBank: Partial<Record<Sfx | UiSound, Howl>> = {};
 let bgm: Howl | null = null;
@@ -103,6 +103,9 @@ export function unlockAudio(): void {
   if (disposed) return;
   resumeAudioContext();
   Howler.autoUnlock = true;
+  if (musicRequested && bgm && !bgm.playing()) {
+    bgm.play();
+  }
 }
 
 export function destroyAudio(): void {
