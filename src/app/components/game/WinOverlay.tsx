@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { type UsePairMatchGame } from "../../hooks/usePairMatchGame";
 import { HyperModal } from "./overlays/HyperModal";
 import { RewardAdButton } from "./ui/RewardAdButton";
@@ -11,14 +12,19 @@ export function WinOverlay({
   onNextLevel,
   onShowScores,
   game,
+  onAdStart,
+  onAdEnd,
 }: {
   score: number;
   onNextLevel: () => void;
   onShowScores: () => void;
   game: UsePairMatchGame;
+  onAdStart?: () => void;
+  onAdEnd?: () => void;
 }) {
   const [doubleClaimed, setDoubleClaimed] = useState(false);
   const [displayScore, setDisplayScore] = useState(score);
+  const { t } = useTranslation();
 
   useEffect(() => {
     setDisplayScore(score);
@@ -36,7 +42,7 @@ export function WinOverlay({
       </div>
       
       <h2 className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-4 shadow-text">
-        HOÀN THÀNH!
+        {t("completed", "HOÀN THÀNH!")}
       </h2>
       
       <div className={`text-[var(--hyper-orange)] font-black text-5xl mb-8 drop-shadow-md hyper-score-animate ${doubleClaimed ? 'doubling' : ''}`}>
@@ -50,13 +56,15 @@ export function WinOverlay({
             <RewardAdButton 
               rewardType="x2" 
               onSuccess={handleDoubleScore} 
-              label="X2 ĐIỂM" 
+              label={t("x2_score_upper", "X2 ĐIỂM")}
+              beforeAd={onAdStart}
+              afterAd={onAdEnd}
             />
           </div>
         )}
         <div className={doubleClaimed ? "w-full flex flex-col sm:flex-row gap-3" : "flex-1 flex flex-col gap-3"}>
           <HyperModalButton onClick={onNextLevel} variant="secondary" className="flex-1">
-            TIẾP TỤC
+            {t("continue", "TIẾP TỤC")}
           </HyperModalButton>
           {!doubleClaimed && (
              <HyperModalButton onClick={onShowScores} variant="secondary">

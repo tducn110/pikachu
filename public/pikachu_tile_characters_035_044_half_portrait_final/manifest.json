@@ -18,9 +18,9 @@
     {
       "id": 35,
       "key": "doge_muscular",
-      "filename": "035_doge_muscular.png",
-      "master_path": "png_512/035_doge_muscular.png",
-      "runtime_path": "runtime_256/035_doge_muscular.png",
+      "filename": "035_doge_muscular.webp",
+      "master_path": "png_512/035_doge_muscular.webp",
+      "runtime_path": "runtime_256/035_doge_muscular.webp",
       "size_master": [
         512,
         512
@@ -43,9 +43,9 @@
     {
       "id": 36,
       "key": "buffalo_cheerful",
-      "filename": "036_buffalo_cheerful.png",
-      "master_path": "png_512/036_buffalo_cheerful.png",
-      "runtime_path": "runtime_256/036_buffalo_cheerful.png",
+      "filename": "036_buffalo_cheerful.webp",
+      "master_path": "png_512/036_buffalo_cheerful.webp",
+      "runtime_path": "runtime_256/036_buffalo_cheerful.webp",
       "size_master": [
         512,
         512
@@ -68,9 +68,9 @@
     {
       "id": 37,
       "key": "dinosaur_green",
-      "filename": "037_dinosaur_green.png",
-      "master_path": "png_512/037_dinosaur_green.png",
-      "runtime_path": "runtime_256/037_dinosaur_green.png",
+      "filename": "037_dinosaur_green.webp",
+      "master_path": "png_512/037_dinosaur_green.webp",
+      "runtime_path": "runtime_256/037_dinosaur_green.webp",
       "size_master": [
         512,
         512
@@ -93,9 +93,9 @@
     {
       "id": 38,
       "key": "goat_excited",
-      "filename": "038_goat_excited.png",
-      "master_path": "png_512/038_goat_excited.png",
-      "runtime_path": "runtime_256/038_goat_excited.png",
+      "filename": "038_goat_excited.webp",
+      "master_path": "png_512/038_goat_excited.webp",
+      "runtime_path": "runtime_256/038_goat_excited.webp",
       "size_master": [
         512,
         512
@@ -118,9 +118,9 @@
     {
       "id": 39,
       "key": "bear_conical_hat",
-      "filename": "039_bear_conical_hat.png",
-      "master_path": "png_512/039_bear_conical_hat.png",
-      "runtime_path": "runtime_256/039_bear_conical_hat.png",
+      "filename": "039_bear_conical_hat.webp",
+      "master_path": "png_512/039_bear_conical_hat.webp",
+      "runtime_path": "runtime_256/039_bear_conical_hat.webp",
       "size_master": [
         512,
         512
@@ -143,9 +143,9 @@
     {
       "id": 40,
       "key": "bear_bandaged",
-      "filename": "040_bear_bandaged.png",
-      "master_path": "png_512/040_bear_bandaged.png",
-      "runtime_path": "runtime_256/040_bear_bandaged.png",
+      "filename": "040_bear_bandaged.webp",
+      "master_path": "png_512/040_bear_bandaged.webp",
+      "runtime_path": "runtime_256/040_bear_bandaged.webp",
       "size_master": [
         512,
         512
@@ -168,9 +168,9 @@
     {
       "id": 41,
       "key": "frog_sad",
-      "filename": "041_frog_sad.png",
-      "master_path": "png_512/041_frog_sad.png",
-      "runtime_path": "runtime_256/041_frog_sad.png",
+      "filename": "041_frog_sad.webp",
+      "master_path": "png_512/041_frog_sad.webp",
+      "runtime_path": "runtime_256/041_frog_sad.webp",
       "size_master": [
         512,
         512
@@ -193,9 +193,9 @@
     {
       "id": 42,
       "key": "chicken_shocked",
-      "filename": "042_chicken_shocked.png",
-      "master_path": "png_512/042_chicken_shocked.png",
-      "runtime_path": "runtime_256/042_chicken_shocked.png",
+      "filename": "042_chicken_shocked.webp",
+      "master_path": "png_512/042_chicken_shocked.webp",
+      "runtime_path": "runtime_256/042_chicken_shocked.webp",
       "size_master": [
         512,
         512
@@ -218,9 +218,9 @@
     {
       "id": 43,
       "key": "cat_tongue_out",
-      "filename": "043_cat_tongue_out.png",
-      "master_path": "png_512/043_cat_tongue_out.png",
-      "runtime_path": "runtime_256/043_cat_tongue_out.png",
+      "filename": "043_cat_tongue_out.webp",
+      "master_path": "png_512/043_cat_tongue_out.webp",
+      "runtime_path": "runtime_256/043_cat_tongue_out.webp",
       "size_master": [
         512,
         512
@@ -243,9 +243,9 @@
     {
       "id": 44,
       "key": "panda_pointing",
-      "filename": "044_panda_pointing.png",
-      "master_path": "png_512/044_panda_pointing.png",
-      "runtime_path": "runtime_256/044_panda_pointing.png",
+      "filename": "044_panda_pointing.webp",
+      "master_path": "png_512/044_panda_pointing.webp",
+      "runtime_path": "runtime_256/044_panda_pointing.webp",
       "size_master": [
         512,
         512

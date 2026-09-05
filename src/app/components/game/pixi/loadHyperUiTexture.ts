@@ -1,7 +1,7 @@
 import { Assets, type Texture } from "pixi.js";
 
 export const HYPER_PANEL_FRAME = {
-  src: "/hyper-ui/surfaces/panel-frame.png",
+  src: "/hyper-ui/surfaces/panel-frame.webp",
   leftWidth: 101,
   topHeight: 96,
   rightWidth: 101,

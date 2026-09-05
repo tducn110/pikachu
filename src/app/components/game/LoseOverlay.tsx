@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { type UsePairMatchGame } from "../../hooks/usePairMatchGame";
 import { type LoseReason } from "../../hooks/useGameSession";
 import { HyperModal } from "./overlays/HyperModal";
@@ -12,14 +13,19 @@ export function LoseOverlay({
   onPlayAgain,
   game,
   reason,
+  onAdStart,
+  onAdEnd,
 }: {
   score: number;
   onPlayAgain: () => void;
   game: UsePairMatchGame;
   reason: LoseReason | null;
+  onAdStart?: () => void;
+  onAdEnd?: () => void;
 }) {
   const [doubleClaimed, setDoubleClaimed] = useState(false);
   const [displayScore, setDisplayScore] = useState(score);
+  const { t } = useTranslation();
 
   useEffect(() => {
     setDisplayScore(score);
@@ -30,7 +36,7 @@ export function LoseOverlay({
     setDoubleClaimed(true);
   };
 
-  const title = reason === "timeout" ? "HẾT THỜI GIAN!" : "BẠN ĐÃ THUA!";
+  const title = reason === "timeout" ? t("time_up", "HẾT THỜI GIAN!") : t("you_lose", "BẠN ĐÃ THUA!");
   const icon = reason === "timeout" ? "clock" : "heart";
 
   return (
@@ -44,7 +50,7 @@ export function LoseOverlay({
       </h2>
 
       <div className="text-[var(--hyper-purple-deep)] font-black text-xl mb-1 uppercase tracking-wide">
-        ĐIỂM
+        {t("score_upper", "ĐIỂM")}
       </div>
       
       <div className={`text-[var(--hyper-orange)] font-black text-5xl mb-8 drop-shadow-md hyper-score-animate ${doubleClaimed ? 'doubling' : ''}`}>
@@ -57,15 +63,22 @@ export function LoseOverlay({
             <RewardAdButton 
               rewardType="x2" 
               onSuccess={handleDoubleScore} 
-              label="X2 ĐIỂM" 
+              label={`X2 ${t("score_upper", "ĐIỂM")}`}
+              beforeAd={onAdStart}
+              afterAd={onAdEnd}
             />
           </div>
         )}
         <div className={doubleClaimed ? "w-full" : "flex-1"}>
-          <HyperModalButton onClick={onPlayAgain} variant="secondary">
+          <HyperModalButton
+            onClick={() => {
+              onPlayAgain();
+            }}
+            variant="secondary"
+          >
             <div className="flex items-center justify-center gap-2">
               <RotateCcw size={18} />
-              CHƠI LẠI
+              {t("play_again", "CHƠI LẠI")}
             </div>
           </HyperModalButton>
         </div>

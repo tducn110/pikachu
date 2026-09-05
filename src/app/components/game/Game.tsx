@@ -1,10 +1,12 @@
-import { useLayoutEffect, useState, type CSSProperties } from "react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { playSfx } from "../../utils/audio";
+import { requestInterstitialAd } from "../../utils/ads";
 import { usePairMatchGame } from "../../hooks/usePairMatchGame";
 import { getBoardSize } from "../../utils/pairMatchLogic";
 import { GameBoard } from "./GameBoard";
 import { PauseOverlay } from "./PauseOverlay";
-import { ScoresOverlay } from "./ScoresOverlay";
+import { DashboardScreen } from "../screens/DashboardScreen";
 import { WinOverlay } from "./WinOverlay";
 import { LoseOverlay } from "./LoseOverlay";
 import { WrongToast } from "./WrongToast";
@@ -15,13 +17,38 @@ import { HyperIcon, HyperTitleBar, type HyperIconName } from "./hyperUi";
 import { Pause } from "lucide-react";
 
 export function Game() {
+  const { t } = useTranslation();
   const [showPause, setShowPause] = useState(false);
-  const [showScores, setShowScores] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
   const [adPromptItem, setAdPromptItem] = useState<"hint" | "shuffle" | "bomb" | null>(null);
-  const game = usePairMatchGame({ isPaused: showPause || showScores || adPromptItem !== null });
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-  const boardSize = getBoardSize(game.level, isMobile);
+
+  // Single source of truth: anything that should freeze the game timer + input
+  const isPaused = showPause || showDashboard || adPromptItem !== null;
+
+  const game = usePairMatchGame({
+    isPaused,
+  });
+  const boardSize = getBoardSize(game.level);
   const totalPairs = (boardSize.rows * boardSize.cols) / 2;
+
+  const handleRestart = () => {
+    void requestInterstitialAd({
+      type: "start",
+      name: "restart_game",
+    }).then(() => game.resetGame());
+  };
+
+  // Interstitial between levels — transition always continues regardless of ad outcome
+  const handleNextLevel = () => {
+    void requestInterstitialAd({
+      type: "next",
+      name: "level_complete",
+    }).then(() => game.nextLevel());
+  };
+
+  const handleCloseDashboard = () => {
+    setShowDashboard(false);
+  };
 
   const handleSupportRequest = (type: "hint" | "shuffle" | "bomb", action: () => void) => {
     if (game.supportStock[type] <= 0) {
@@ -38,35 +65,40 @@ export function Game() {
   return (
     <main
       className="hyper-game-root relative h-[100dvh] overflow-hidden bg-cover bg-center bg-fixed font-sans"
-      style={{ backgroundImage: "url('/background.png')" }}
+      style={{ backgroundImage: "url('/background.webp')" }}
     >
       <div className="hyper-game-atmosphere pointer-events-none absolute inset-0" />
 
       <div className="hyper-game-viewport relative z-10 mx-auto flex h-full min-h-0 w-full items-center justify-center">
         <section className="hyper-game-stage flex h-full min-h-0 w-full flex-col items-center justify-center p-2 lg:p-8">
-          <div className="hyper-main-frame w-full h-[74vh] lg:h-auto max-h-full my-auto flex flex-col min-h-0 lg:flex lg:flex-1 lg:my-0 shrink-0">
+          <div className="hyper-main-frame w-full h-auto max-h-full my-0 flex flex-1 flex-col min-h-0 lg:h-auto lg:flex lg:flex-1 lg:my-0">
             <MobileGameHeader
               timeLeft={game.timeLeft}
               maxTime={game.maxTime}
               score={game.score}
               lives={game.lives}
+              onDashboard={() => setShowDashboard(true)}
               onSettings={() => setShowPause(true)}
             />
 
             <div className="hyper-game-layout flex min-h-0 min-w-0 flex-1 flex-col lg:grid">
               <aside className="hyper-sidebar hidden min-h-0 lg:block">
-                <DesktopTimer timeLeft={game.timeLeft} maxTime={game.maxTime} isPaused={showPause || showScores} />
+                <DesktopTimer
+                  timeLeft={game.timeLeft}
+                  maxTime={game.maxTime}
+                  isPaused={isPaused}
+                />
 
                 <div className="hyper-sidebar-frame">
                   <div className="hyper-sidebar-content">
                     <div className="hyper-sidebar-top">
                       <div className="hyper-score-card">
-                        <HyperTitleBar className="hyper-score-title">Điểm</HyperTitleBar>
+                        <HyperTitleBar className="hyper-score-title">{t("score", "Điểm")}</HyperTitleBar>
                         <button
                           type="button"
                           className="hyper-score-total"
-                          onClick={() => { playSfx("click"); setShowScores(true); }}
-                          aria-label="Mở bảng điểm"
+                          onClick={() => { playSfx("click"); setShowDashboard(true); }}
+                          aria-label={t("open_scores", "Mở bảng điểm")}
                         >
                           {game.score.toLocaleString("vi-VN")}
                         </button>
@@ -77,7 +109,7 @@ export function Game() {
                         )}
                       </div>
 
-                      <div className="hyper-hearts-panel" aria-label={`${game.lives} trên 3 lượt`}>
+                      <div className="hyper-hearts-panel" aria-label={`${game.lives} ${t("lives_out_of_3", "trên 3 lượt")}`}>
                         {[1, 2, 3].map(i => (
                           <HyperIcon key={i} name="heart" className={`hyper-heart ${i > game.lives ? "hyper-heart--empty" : ""}`} />
                         ))}
@@ -85,22 +117,29 @@ export function Game() {
                     </div>
 
                     <div className="hyper-sidebar-support">
-                      <HyperTitleBar className="hyper-support-title">Vật phẩm hỗ trợ</HyperTitleBar>
                       <div className="hyper-support-list">
-                        <SupportButton iconName="hint" label="Gợi ý" stock={game.supportStock.hint} onClick={doHint} />
-                        <SupportButton iconName="shuffle" label="Đảo" stock={game.supportStock.shuffle} onClick={doShuffle} />
-                        <SupportButton iconName="bomb" label="Bom" stock={game.supportStock.bomb} onClick={doBomb} />
+                        <SupportButton iconName="hint" label={t("hint", "Gợi ý")} stock={game.supportStock.hint} onClick={doHint} />
+                        <SupportButton iconName="shuffle" label={t("shuffle", "Đảo")} stock={game.supportStock.shuffle} onClick={doShuffle} />
+                        <SupportButton iconName="bomb" label={t("bomb", "Bom")} stock={game.supportStock.bomb} onClick={doBomb} />
                       </div>
                     </div>
 
                     <div className="hyper-sidebar-footer">
                       <button
                         type="button"
-                        onClick={() => { playSfx("click"); setShowPause(true); }}
-                        className="hyper-pause-orb flex items-center justify-center"
-                        aria-label="Tạm dừng"
+                        onClick={() => { playSfx("click"); setShowDashboard(true); }}
+                        className="hyper-action-orb flex items-center justify-center"
+                        aria-label={t("open_leaderboard", "Mở bảng xếp hạng")}
                       >
-                        <Pause className="fill-[#ffbd19] text-[#ffbd19]" size={16} />
+                        <HyperIcon name="trophy" className="hyper-action-orb-icon" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { playSfx("click"); setShowPause(true); }}
+                        className="hyper-action-orb flex items-center justify-center"
+                        aria-label={t("pause", "Tạm dừng")}
+                      >
+                        <Pause size={24} strokeWidth={3} />
                       </button>
                     </div>
                   </div>
@@ -121,9 +160,9 @@ export function Game() {
                 {game.wrongIds.length === 2 && game.wrongReason && <WrongToast reason={game.wrongReason} />}
                 {game.shuffleNotice && <ShuffleToast />}
                 {game.status === "won" && (
-                  <WinOverlay score={game.score} onNextLevel={game.nextLevel} onShowScores={() => setShowScores(true)} game={game} />
+                  <WinOverlay score={game.score} onNextLevel={handleNextLevel} onShowScores={() => setShowDashboard(true)} game={game} />
                 )}
-                {game.status === "lost" && <LoseOverlay score={game.score} onPlayAgain={game.resetGame} game={game} reason={game.loseReason} />}
+                {game.status === "lost" && <LoseOverlay score={game.score} onPlayAgain={handleRestart} game={game} reason={game.loseReason} />}
                 {game.status === "revive" && <ReviveOverlay game={game} />}
                 {adPromptItem && (
                   <AdPromptOverlay
@@ -142,9 +181,9 @@ export function Game() {
           {/* Mobile Power-up Footer */}
           <div className="lg:hidden mt-2 flex justify-center items-center shrink-0">
             <div className="hyper-panel flex items-center justify-center gap-6 px-6 py-3 rounded-[2rem] border-2 border-[#d2aa6f] shadow-xl">
-              <SupportButton compact iconName="hint" label="Gợi ý" stock={game.supportStock.hint} onClick={doHint} />
-              <SupportButton compact iconName="shuffle" label="Đảo" stock={game.supportStock.shuffle} onClick={doShuffle} />
-              <SupportButton compact iconName="bomb" label="Bom" stock={game.supportStock.bomb} onClick={doBomb} />
+              <SupportButton compact iconName="hint" label={t("hint", "Gợi ý")} stock={game.supportStock.hint} onClick={doHint} />
+              <SupportButton compact iconName="shuffle" label={t("shuffle", "Đảo")} stock={game.supportStock.shuffle} onClick={doShuffle} />
+              <SupportButton compact iconName="bomb" label={t("bomb", "Bom")} stock={game.supportStock.bomb} onClick={doBomb} />
             </div>
           </div>
         </section>
@@ -153,19 +192,25 @@ export function Game() {
       {showPause && (
         <PauseOverlay
           onClose={() => setShowPause(false)}
-          onRestart={game.resetGame}
           sfxEnabled={game.sfxEnabled}
           musicEnabled={game.musicEnabled}
           setSfxEnabled={game.setSfxEnabled}
           setMusicEnabled={game.setMusicEnabled}
         />
       )}
-      {showScores && <ScoresOverlay onClose={() => setShowScores(false)} stats={game.stats} />}
+      {showDashboard && (
+        <DashboardScreen
+          score={game.score}
+          stats={game.stats}
+          onClose={handleCloseDashboard}
+        />
+      )}
     </main>
   );
 }
 
 function DesktopTimer({ timeLeft, maxTime, isPaused }: { timeLeft: number; maxTime: number; isPaused?: boolean }) {
+  const { t } = useTranslation();
   const progress = Math.max(0, Math.min(100, (timeLeft / Math.max(1, maxTime)) * 100));
   // Color shifts: >50% green-cyan, 25-50% yellow-orange, <25% orange-red
   const fillColor =
@@ -176,7 +221,7 @@ function DesktopTimer({ timeLeft, maxTime, isPaused }: { timeLeft: number; maxTi
         : "linear-gradient(0deg, #c83b4d 0%, #ff6a30 50%, #ffb830 100%)";
 
   return (
-    <div className="hyper-timer" aria-label={`Thời gian còn lại ${timeLeft} giây`}>
+    <div className="hyper-timer" aria-label={`${t("time", "Thời gian")} ${timeLeft}s`}>
       <div className="hyper-timer-clock">
         <HyperIcon name="clock" />
       </div>
@@ -193,46 +238,53 @@ function MobileGameHeader({
   maxTime,
   score,
   lives,
+  onDashboard,
   onSettings,
 }: {
   timeLeft: number;
   maxTime: number;
   score: number;
   lives: number;
+  onDashboard: () => void;
   onSettings: () => void;
 }) {
-  const timeProgress = Math.max(0, Math.min(100, (timeLeft / maxTime) * 100));
-
+  const { t } = useTranslation();
+  const timeProgress = Math.max(0, Math.min(100, (timeLeft / Math.max(1, maxTime)) * 100));
   return (
     <header className="game-mobile-header flex flex-col shrink-0 gap-2 pb-2 lg:hidden px-2 pt-2">
-      {/* Top Row: Timer + Pause */}
+      {/* Timer and primary controls stay in the top row on phones. */}
       <div className="flex items-center gap-2">
-        {/* Timer Bar */}
-        <div className="game-mobile-progress hyper-panel flex flex-1 items-center gap-1.5 rounded-xl px-2 py-1 min-w-0 border border-[#d2aa6f]">
+        <div className="game-mobile-progress hyper-panel flex min-w-0 flex-1 items-center gap-1.5 rounded-xl px-3 py-2">
           <HyperIcon name="clock" className="h-5 w-5 shrink-0 object-contain" />
-          <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full border border-[#d2aa6f] bg-[#f6d7a2] p-0.5">
-            <div className="h-full rounded-full bg-gradient-to-r from-[#ffbe2e] to-[#ff8a18]" style={{ width: `${timeProgress}%` }} />
+          <div className="game-mobile-progress-track min-w-0 flex-1" aria-hidden="true">
+            <div className="game-mobile-progress-fill" style={{ width: `${timeProgress}%` }} />
           </div>
-          <span className="shrink-0 text-xs font-black text-[#8b5a22]">{timeLeft}s</span>
+          <span className="shrink-0 text-xs font-black text-[var(--game-ink-muted)]">{timeLeft}s</span>
         </div>
 
-        {/* Pause Button Wrapped */}
-        <div className="hyper-panel flex items-center justify-center p-1 rounded-xl border border-[#d2aa6f] shrink-0">
+        <div className="hyper-panel hyper-mobile-actions flex items-center justify-center gap-1.5 p-1 rounded-xl border border-[#d2aa6f] shrink-0">
+          <button
+            type="button"
+            onClick={() => { playSfx("click"); onDashboard(); }}
+            aria-label={t("open_leaderboard", "Mở bảng xếp hạng")}
+            className="hyper-action-orb-mobile flex items-center justify-center shrink-0"
+          >
+            <HyperIcon name="trophy" className="hyper-action-orb-icon" />
+          </button>
           <button
             type="button"
             onClick={() => { playSfx("click"); onSettings(); }}
-            aria-label="Tạm dừng"
-            className="hyper-pause-orb-mobile flex items-center justify-center shrink-0"
-            style={{ width: "28px", height: "28px" }}
+            aria-label={t("pause", "Tạm dừng")}
+            className="hyper-action-orb-mobile flex items-center justify-center shrink-0"
           >
-            <Pause className="fill-[#ffbd19] text-[#ffbd19]" size={12} />
+            <Pause size={24} strokeWidth={3} />
           </button>
         </div>
       </div>
 
       {/* Second Row: Hearts + Score (Centered & Enlarged) */}
-      <div className="flex items-center justify-center">
-        <div className="hyper-panel flex items-center justify-center gap-3 rounded-2xl px-5 py-1.5 border border-[#d2aa6f]">
+      <div className="game-mobile-stats flex w-full items-center justify-center">
+        <div className="game-mobile-stats-panel hyper-panel flex items-center justify-center gap-3 rounded-2xl px-5 py-1.5 border border-[#d2aa6f]">
           {/* Hearts */}
           <div className="flex gap-1">
             {[1, 2, 3].map(i => (

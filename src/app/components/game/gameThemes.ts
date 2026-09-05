@@ -1,4 +1,4 @@
-/** Bộ Lạc Đậu Phộng palette (from DESIGN.md). */
+/** Pikachu palette (from DESIGN.md). */
 export const palette = {
   ricePaper: "#f4f9ff",
   paperWarm: "#e6f1ff",

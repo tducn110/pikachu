@@ -1,17 +1,17 @@
 import { useState, useCallback, useEffect } from "react";
 import { type Sfx, type UiSound, playSfx, setSfxEnabled as setAudioSfxEnabled, toggleBgm, unlockAudio } from "../utils/audio";
 
-export function useGameAudio() {
+export function useGameAudio(parentMuted = false) {
   const [sfxEnabled, setSfxEnabled] = useState(true);
   const [musicEnabled, setMusicEnabled] = useState(true);
 
   useEffect(() => {
-    setAudioSfxEnabled(sfxEnabled);
-  }, [sfxEnabled]);
+    setAudioSfxEnabled(sfxEnabled && !parentMuted);
+  }, [sfxEnabled, parentMuted]);
 
   useEffect(() => {
-    toggleBgm(musicEnabled);
-  }, [musicEnabled]);
+    toggleBgm(musicEnabled && !parentMuted);
+  }, [musicEnabled, parentMuted]);
 
   useEffect(() => {
     const unlock = () => unlockAudio();
@@ -27,13 +27,13 @@ export function useGameAudio() {
   const setMusic = useCallback((value: boolean) => {
     unlockAudio();
     setMusicEnabled(value);
-    toggleBgm(value);
-  }, []);
+    toggleBgm(value && !parentMuted);
+  }, [parentMuted]);
 
   const setSfx = useCallback((value: boolean) => {
     setSfxEnabled(value);
-    setAudioSfxEnabled(value);
-  }, []);
+    setAudioSfxEnabled(value && !parentMuted);
+  }, [parentMuted]);
 
   const sfx = useCallback(
     (type: Sfx) => {

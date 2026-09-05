@@ -244,7 +244,7 @@
   "meta": {
     "app": "OpenAI asset normalization",
     "version": "1.0",
-    "image": "tiles_512.png",
+    "image": "tiles_512.webp",
     "format": "RGBA8888",
     "size": {
       "w": 2560,

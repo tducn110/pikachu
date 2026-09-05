@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { memo, useEffect, useRef, useState } from "react";
 import { Application, Container, Graphics, NineSliceSprite, Rectangle, Sprite } from "pixi.js";
 import gsap from "gsap";
@@ -73,10 +74,10 @@ export const GameBoard = memo(function GameBoard({
   level,
   combo,
 }: Props) {
+  const { t } = useTranslation();
   perfDiagnostics.count("react.gameBoardRender");
   // Recalculate layout based on current tiles/level and container size
-  const isMobileSize = typeof window !== "undefined" && window.innerWidth < 1024;
-  const { rows, cols } = getBoardSize(level, isMobileSize);
+  const { rows, cols } = getBoardSize(level);
   const hostRef = useRef<HTMLDivElement>(null);
   const onSelectRef = useRef(onSelect);
   const layoutRef = useRef({ rows, cols });
@@ -530,7 +531,7 @@ export const GameBoard = memo(function GameBoard({
         initialized = true;
         setAssetStatus("ready");
         host.appendChild(app.canvas);
-        app.canvas.setAttribute("aria-label", "Bàn chơi Ghép Đôi Bộ Lạc");
+        app.canvas.setAttribute("aria-label", t("pikachu_board", "Bàn chơi Ghép đôi Pikachu"));
         app.canvas.style.display = "block";
         app.canvas.style.width   = "100%";
         app.canvas.style.height  = "100%";
@@ -591,7 +592,7 @@ export const GameBoard = memo(function GameBoard({
     <div
       ref={hostRef}
       role="group"
-      aria-label="Bàn chơi Ghép Đôi Bộ Lạc"
+      aria-label={t("pikachu_board", "Bàn chơi Ghép đôi Pikachu")}
       aria-busy={assetStatus === "loading"}
       className="relative h-full w-full overflow-hidden"
     >
@@ -601,8 +602,8 @@ export const GameBoard = memo(function GameBoard({
           role={assetStatus === "error" ? "alert" : "status"}
         >
           {assetStatus === "error"
-            ? `Không thể tải asset bàn chơi: ${assetError}`
-            : "Đang tải nhân vật bàn chơi…"}
+            ? `${t("error_loading_assets", "Không thể tải asset bàn chơi:")} ${assetError}`
+            : t("loading_characters", "Loading...")}
         </div>
       )}
     </div>

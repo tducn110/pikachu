@@ -52,8 +52,16 @@ export interface UsePairMatchGame {
   setLost: (reason: "timeout" | "no_lives") => void;
 }
 
-export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = {}): UsePairMatchGame {
-  const audio = useGameAudio();
+export function usePairMatchGame({
+  isPaused = false,
+  parentMuted = false,
+  onRoundStart,
+}: {
+  isPaused?: boolean;
+  parentMuted?: boolean;
+  onRoundStart?: () => void;
+} = {}): UsePairMatchGame {
+  const audio = useGameAudio(parentMuted);
   const session = useGameSession();
   const board = useGameBoard();
   const [shuffleNotice, setShuffleNotice] = useState(false);
@@ -99,6 +107,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
       if (!tile || tile.removed) return;
       if (board.selectedIds.includes(tileId)) return;
 
+      onRoundStart?.();
       board.setHintIds([]);
       audio.sfx("tap");
 
@@ -110,8 +119,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
       const [firstId, secondId] = next;
       const a = board.tiles.find((t) => t.id === firstId)!;
       const b = board.tiles.find((t) => t.id === secondId)!;
-      const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-      const { rows, cols } = getBoardSize(session.level, isMobile);
+            const { rows, cols } = getBoardSize(session.level);
       const result = perfDiagnostics.measure("pikachu.path.find", () =>
         evaluatePairMatch(board.tiles, a, b, rows, cols),
       );
@@ -149,7 +157,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
         }, 700);
       }
     },
-    [board.tiles, board.selectedIds, board.setActivePath, board.setHintIds, board.setSelectedIds, board.setWrongIds, board.removePair, session.status, session.level, session.combo, session.addMove, session.addScore, session.addTime, session.increaseCombo, session.resetCombo, session.removeLife, audio.sfx, isPaused, scheduleForCurrentRun]
+    [board.tiles, board.selectedIds, board.setActivePath, board.setHintIds, board.setSelectedIds, board.setWrongIds, board.removePair, session.status, session.level, session.combo, session.addMove, session.addScore, session.addTime, session.increaseCombo, session.resetCombo, session.removeLife, audio.sfx, isPaused, scheduleForCurrentRun, onRoundStart]
   );
 
   // Detect win or reshuffle
@@ -161,8 +169,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
         audio.sfx("win");
         session.setWon();
       } else {
-        const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-        const { rows, cols } = getBoardSize(session.level, isMobile);
+                const { rows, cols } = getBoardSize(session.level);
         const boardChanged = board.shuffleIfNoMatch(rows, cols);
         if (boardChanged) {
           setShuffleNotice(true);
@@ -215,9 +222,9 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
   const hintPair = useCallback(() => {
     if (session.status !== "playing" || lockRef.current || isPaused) return;
     perfDiagnostics.count("pikachu.hint.calls");
+    onRoundStart?.();
     const scanStartedAt = perfDiagnostics.start("pikachu.hint.scan");
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-    const { rows, cols } = getBoardSize(session.level, isMobile);
+        const { rows, cols } = getBoardSize(session.level);
     const match = findAvailableMatch(board.tiles, rows, cols);
     if (match) {
       board.setHintIds([match.first.id, match.second.id]);
@@ -229,13 +236,13 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
       return;
     }
     perfDiagnostics.end("pikachu.hint.scan", scanStartedAt);
-  }, [board.tiles, board.setHintIds, session.status, session.level, session.addScore, audio.sfx, isPaused, scheduleForCurrentRun]);
+  }, [board.tiles, board.setHintIds, session.status, session.level, session.addScore, audio.sfx, isPaused, scheduleForCurrentRun, onRoundStart]);
 
   const shuffleBoard = useCallback(() => {
     if (session.status !== "playing" || lockRef.current || isPaused) return;
     perfDiagnostics.count("pikachu.shuffle.calls");
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-    const { rows, cols } = getBoardSize(session.level, isMobile);
+    onRoundStart?.();
+        const { rows, cols } = getBoardSize(session.level);
     lockRef.current = true;
     board.setSelectedIds([]);
     board.setWrongIds([]);
@@ -256,12 +263,12 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
     session.addMove();
     audio.sfx("reset");
     lockRef.current = false;
-  }, [board.setSelectedIds, board.setWrongIds, board.setHintIds, board.setActivePath, board.setTiles, session.status, session.level, session.addMove, audio.sfx, isPaused]);
+  }, [board.setSelectedIds, board.setWrongIds, board.setHintIds, board.setActivePath, board.setTiles, session.status, session.level, session.addMove, audio.sfx, isPaused, onRoundStart]);
 
   const bombPair = useCallback(() => {
     if (session.status !== "playing" || lockRef.current || isPaused) return;
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-    const { rows, cols } = getBoardSize(session.level, isMobile);
+    onRoundStart?.();
+        const { rows, cols } = getBoardSize(session.level);
     const match = findAvailableMatch(board.tiles, rows, cols);
     if (!match) return;
 
@@ -281,7 +288,7 @@ export function usePairMatchGame({ isPaused = false }: { isPaused?: boolean } = 
       board.setActivePath(null);
       lockRef.current = false;
     }, 400);
-  }, [board.tiles, board.setSelectedIds, board.setWrongIds, board.setHintIds, board.setActivePath, board.removePair, session.status, session.level, session.addMove, session.addScore, audio.sfx, isPaused, scheduleForCurrentRun]);
+  }, [board.tiles, board.setSelectedIds, board.setWrongIds, board.setHintIds, board.setActivePath, board.removePair, session.status, session.level, session.addMove, session.addScore, audio.sfx, isPaused, scheduleForCurrentRun, onRoundStart]);
 
   return {
     tiles: board.tiles,

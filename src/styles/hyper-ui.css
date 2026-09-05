@@ -1,4 +1,14 @@
 :root {
+  --game-surface: #fff8e7;
+  --game-surface-soft: #fff0c4;
+  --game-surface-deep: #f7ce78;
+  --game-ink: #382047;
+  --game-ink-muted: #815a2c;
+  --game-accent: #7227b8;
+  --game-gold: #f6b51b;
+  --game-orange: #f4771a;
+  --game-brown: #6d3c16;
+  --game-danger: #c83b4d;
   --hyper-cream: #f8ebcf;
   --hyper-cream-light: #fff8e7;
   --hyper-cream-deep: #f1d39a;
@@ -60,7 +70,7 @@
   text-align: center; white-space: nowrap;
   text-transform: uppercase;
   text-shadow: 0 2px 0 rgba(42, 10, 78, 0.65), 0 0 8px rgba(255, 218, 105, 0.3);
-  background: url("/hyper-ui/surfaces/title-bar.png") center / 100% 100% no-repeat;
+  background: url("/hyper-ui/surfaces/title-bar.webp") center / 100% 100% no-repeat;
   filter: drop-shadow(0 5px 7px rgba(83, 41, 13, 0.2));
 }
 
@@ -260,7 +270,7 @@
   border-radius: 16px;
   padding: 0.45rem 1rem 0.45rem 3.5rem;
   color: var(--hyper-brown);
-  background: url("/hyper-ui/surfaces/info-row.png") center / 100% 100% no-repeat;
+  background: url("/hyper-ui/surfaces/info-row.webp") center / 100% 100% no-repeat;
   filter: drop-shadow(0 4px 7px rgba(83, 41, 13, 0.14));
 }
 
@@ -300,7 +310,7 @@
   width: min(100%, 10rem);
   aspect-ratio: 1;
   margin: 0.8rem auto;
-  background: url("/hyper-ui/surfaces/panel-frame.png") center / 100% 100% no-repeat;
+  background: url("/hyper-ui/surfaces/panel-frame.webp") center / 100% 100% no-repeat;
   filter: drop-shadow(0 7px 10px rgba(83, 41, 13, 0.18));
 }
 
@@ -383,7 +393,7 @@
   padding: 0;
   color: var(--hyper-purple-ink);
   cursor: pointer;
-  background: url("/hyper-ui/surfaces/info-row.png") center / 100% 100% no-repeat;
+  background: url("/hyper-ui/surfaces/info-row.webp") center / 100% 100% no-repeat;
   filter: drop-shadow(0 5px 7px rgba(83, 41, 13, 0.18));
   transition: transform 140ms ease, filter 140ms ease;
 }
@@ -413,7 +423,7 @@
   padding: 0.75rem;
   border: 0;
   border-radius: 25px;
-  background: url("/hyper-ui/surfaces/panel-frame.png") center / 100% 100% no-repeat;
+  background: url("/hyper-ui/surfaces/panel-frame.webp") center / 100% 100% no-repeat;
   box-shadow: 0 22px 60px rgba(35, 11, 65, 0.38);
   animation: hyper-modal-in 220ms cubic-bezier(0.2, 0.85, 0.3, 1.15) both;
 }
@@ -462,7 +472,7 @@
   padding: 0.45rem 0.85rem 0.45rem 3.2rem;
   color: var(--hyper-brown);
   text-align: left;
-  background: url("/hyper-ui/surfaces/info-row.png") center / 100% 100% no-repeat;
+  background: url("/hyper-ui/surfaces/info-row.webp") center / 100% 100% no-repeat;
   filter: drop-shadow(0 4px 6px rgba(83, 41, 13, 0.12));
 }
 
@@ -513,7 +523,7 @@
   padding: 1.1rem;
   color: var(--hyper-purple-ink);
   text-align: center; white-space: nowrap;
-  background: url("/hyper-ui/surfaces/panel-frame.png") center / 100% 100% no-repeat;
+  background: url("/hyper-ui/surfaces/panel-frame.webp") center / 100% 100% no-repeat;
   box-shadow: 0 18px 42px rgba(50, 15, 89, 0.35);
 }
 
@@ -586,11 +596,100 @@
   border: 20px solid transparent;
   border-right-width: 12px;
   border-left-width: 12px;
-  border-image-source: url("/hyper-ui/surfaces/panel-frame.png");
+  border-image-source: url("/hyper-ui/surfaces/panel-frame.webp");
   border-image-slice: 96 101 fill;
   border-image-width: 20px 12px;
   border-image-repeat: stretch;
   filter: drop-shadow(0 15px 25px rgba(90, 45, 10, 0.4));
+}
+
+/* Mobile has a fixed viewport, a two-row header, and a bottom support rail.
+ * Let the frame consume the remaining flex slot instead of locking it to
+ * 74vh. This keeps the 8/10-row boards inside the canvas on short phones. */
+@media (max-width: 1023px) {
+  .hyper-game-stage {
+    gap: 0.5rem;
+  }
+
+  .hyper-main-frame {
+    height: auto;
+    min-height: 0;
+    flex: 1 1 auto;
+    margin-block: 0;
+  }
+
+  .hyper-board-stage,
+  .hyper-game-layout {
+    min-height: 0;
+  }
+
+  .hyper-action-orb-mobile {
+    position: relative;
+    display: grid;
+    width: 44px;
+    min-width: 44px;
+    max-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    flex: 0 0 44px;
+    place-items: center;
+    padding: 0;
+    border: 3px solid #ffbd19;
+    border-radius: 50%;
+    color: #fff;
+    background: radial-gradient(circle at 36% 28%, #8f43d4, #57209b 64%, #3c116f);
+    box-shadow:
+      0 0 0 1px #c89aff,
+      0 0 0 2px #44108e,
+      inset 0 2px 3px rgba(255, 255, 255, 0.42),
+      inset 0 -2px 3px rgba(48, 10, 90, 0.25),
+      0 4px 6px rgba(65, 20, 110, 0.28);
+    cursor: pointer;
+  }
+
+  .hyper-action-orb-mobile .hyper-action-orb-icon {
+    width: 25px;
+    height: 25px;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 1px rgba(48, 12, 84, 0.62));
+  }
+
+  .game-mobile-progress {
+    width: 100%;
+    min-height: 52px;
+    align-self: stretch;
+    border-color: rgba(189, 104, 16, 0.42);
+  }
+
+  .game-mobile-stats {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .game-mobile-stats-panel {
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+
+  .game-mobile-progress-track {
+    height: 1rem;
+    min-height: 1rem;
+    overflow: hidden;
+    border: 2px solid rgba(189, 104, 16, 0.42);
+    border-radius: 999px;
+    background: #e8c37d;
+    box-shadow: inset 0 2px 5px rgba(86, 43, 17, 0.2);
+  }
+
+  .game-mobile-progress-fill {
+    height: 100%;
+    min-width: 2%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #5bea2d 0%, #21e8dc 55%, #ffbe2e 100%);
+    transition: width 260ms linear;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -668,7 +767,7 @@
 
   .hyper-sidebar-support {
     align-self: center;
-    width: min(100%, 262px);
+    width: min(100%, 226px);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -678,6 +777,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: clamp(12px, 1.3vw, 18px);
     width: 100%;
     margin-top: auto;
     padding-top: 0;
@@ -710,7 +810,7 @@
     min-height: 3.7vh;
     transform: translateX(-50%);
     padding-inline: 1.5rem;
-    font-size: 1.65vh;
+    font-size: clamp(0.72rem, 1.35vh, 0.96rem);
   }
 
   .hyper-score-total {
@@ -791,7 +891,7 @@
     min-height: 5.05vh;
     margin: 0 auto;
     padding-inline: 1.2rem;
-    font-size: 2vh;
+    font-size: clamp(0.78rem, 1.85vh, 1.05rem);
     font-weight: 800;
     display: flex;
     align-items: center;
@@ -807,11 +907,14 @@
   }
 
   .hyper-support-list .hyper-support-button {
+    display: grid;
+    grid-template-columns: 4.7vh minmax(0, 1fr);
+    column-gap: 0.35rem;
     width: 100%;
     min-height: 6.8vh;
     height: 6.8vh;
     border-radius: 36px;
-    padding: 0.35rem 2.2vh 0.35rem 0.5rem;
+    padding: 0.35rem 2.2vh 0.35rem 0.45rem;
   }
 
   .hyper-support-list .hyper-support-icon {
@@ -827,19 +930,26 @@
   .hyper-support-list .hyper-support-label {
     display: flex;
     align-items: center;
+    align-self: center;
+    justify-content: flex-start;
     min-width: 0;
-    padding-left: 8px;
+    min-height: 0;
+    height: 100%;
+    padding: 0 0 0 8px;
     font-size: 1.75vh;
     font-weight: 900;
-    line-height: 1;
+    line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
 
 
-  .hyper-pause-orb {
+  .hyper-action-orb {
     position: relative;
-    width: 5.45vh;
-    height: 5.45vh;
+    width: 7vh;
+    height: 7vh;
     display: grid;
     place-items: center;
     margin: 0;
@@ -857,24 +967,24 @@
     transition: transform 150ms ease, filter 150ms ease;
   }
 
-  .hyper-pause-orb:hover {
+  .hyper-action-orb:hover {
     transform: translateY(-2px) scale(1.04);
     filter: brightness(1.08);
   }
 
-  .hyper-pause-orb:active {
+  .hyper-action-orb:active {
     transform: translateY(2px) scale(0.95);
   }
 
-  .hyper-pause-orb:focus-visible {
+  .hyper-action-orb:focus-visible {
     outline: 2px solid #ffbd19;
     outline-offset: 2px;
   }
 
-  .hyper-pause-orb-mobile {
+  .hyper-action-orb-mobile {
     position: relative;
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
     display: grid;
     place-items: center;
     border: 2px solid #ffbd19;
@@ -889,7 +999,15 @@
     cursor: pointer;
     color: #fff;
   }
-  .hyper-pause-orb-mobile .hyper-pause-icon {
+
+  .hyper-action-orb-icon {
+    width: 58%;
+    height: 58%;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 1px rgba(48, 12, 84, 0.62));
+  }
+
+  .hyper-action-orb-mobile .hyper-pause-icon {
     font-size: 1rem;
     font-weight: 900;
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
@@ -1042,6 +1160,13 @@
   .hyper-support-list .hyper-support-button {
     height: 60px;
     min-height: 60px;
+  }
+
+  /* The compact short-height row has a smaller content box than the normal
+   * proportional row. Lift the font box slightly so its optical center stays
+   * on the card center instead of drifting toward the lower edge. */
+  .hyper-support-list .hyper-support-label {
+    transform: translateY(-0.15rem);
   }
 
   .hyper-support-list .hyper-support-icon {

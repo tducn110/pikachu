@@ -1,15 +1,15 @@
 import type { ImgHTMLAttributes, ReactNode } from "react";
 
 export const HYPER_ICON_SRC = {
-  hint: "/hyper-ui/icons/hint.png",
-  shuffle: "/hyper-ui/icons/shuffle.png",
-  bomb: "/hyper-ui/icons/bomb.png",
-  settings: "/hyper-ui/icons/settings.png",
-  trophy: "/hyper-ui/icons/trophy.png",
-  clock: "/hyper-ui/icons/clock.png",
-  heart: "/hyper-ui/icons/heart.png",
-  music: "/hyper-ui/icons/music.png",
-  sound: "/hyper-ui/icons/sound.png",
+  hint: "/hyper-ui/icons/hint.webp",
+  shuffle: "/hyper-ui/icons/shuffle.webp",
+  bomb: "/hyper-ui/icons/bomb.webp",
+  settings: "/hyper-ui/icons/settings.webp",
+  trophy: "/hyper-ui/icons/trophy.webp",
+  clock: "/hyper-ui/icons/clock.webp",
+  heart: "/hyper-ui/icons/heart.webp",
+  music: "/hyper-ui/icons/music.webp",
+  sound: "/hyper-ui/icons/sound.webp",
 } as const;
 
 export type HyperIconName = keyof typeof HYPER_ICON_SRC;

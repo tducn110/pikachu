@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "game": {
+    "id": "0f442c63-237b-48e9-95c9-3f110fa85637",
+    "slug": "pikachu",
+    "devOrigin": "https://dev-pikachu.papastudio.net",
+    "localOrigin": "http://127.0.0.1:5173"
+  },
+  "wink": {
+    "environment": "dev",
+    "protocolVersion": 1,
+    "bridgeVersion": "9.0.0",
+    "bridgeSha256": "afe2a789466c3d68f4eec7d8cf2e718f45a29a19a5d8b9eb8c4cec10b18f31eb",
+    "devParentOrigin": "https://dev-winkgames.papastudio.net",
+    "harnessOrigin": "http://127.0.0.1:8787",
+    "devApiBase": "https://dev-api-winkgames.papastudio.net/api/v1"
+  },
+  "semantics": {
+    "roundId": "First valid tile interaction, hint, shuffle, or bomb starts one stable round; the round spans the session until the player restarts or the game ends in a terminal loss.",
+    "completion": "Complete the round when the current session ends or the player restarts; board-clearing level advances do not end the round.",
+    "score": "Snapshot the visible score at finalization and submit it once when the round ends, retrying only the failed operation.",
+    "pauseResume": "Host pause stops board input, timers, and scheduled callbacks without resetting the board or round; resume continues the same session.",
+    "muteUnmute": "Host mute controls effective audio output only and must not overwrite the player's saved music or SFX preferences."
+  },
+  "files": {
+    "runtimeConfig": "public/wink-runtime-config.json",
+    "bridge": "public/wink-bridge.js",
+    "bridgeLock": "public/wink-bridge.lock.json",
+    "adapters": [
+      "src/integrations/wink/client.ts",
+      "src/integrations/wink/useWinkIntegration.ts",
+      "src/app/hooks/useRoundFinalization.ts"
+    ],
+    "tests": [
+      "src/integrations/wink/__tests__/client.test.ts"
+    ]
+  },
+  "commands": {
+    "install": "npm ci",
+    "test": "npm test",
+    "typecheck": "npm run typecheck",
+    "build": "npm run build",
+    "serve": "npm run dev -- --host 127.0.0.1 --port 5173"
+  }
+}

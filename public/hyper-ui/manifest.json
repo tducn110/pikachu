@@ -1,8 +1,8 @@
 {
   "version": 1,
   "generatedFrom": {
-    "surfaces": "design-assets/hyper-ui/surfaces-master.png",
-    "icons": "design-assets/hyper-ui/icons-master.png"
+    "surfaces": "design-assets/hyper-ui/surfaces-master.webp",
+    "icons": "design-assets/hyper-ui/icons-master.webp"
   },
   "chromaKeys": {
     "surfaces": [
@@ -29,7 +29,7 @@
         0,
         0
       ],
-      "file": "surfaces/title-bar.png",
+      "file": "surfaces/title-bar.webp",
       "kind": "surface",
       "sourceCell": [
         20,
@@ -57,7 +57,7 @@
         0,
         0
       ],
-      "file": "surfaces/powerup-row.png",
+      "file": "surfaces/powerup-row.webp",
       "kind": "surface",
       "sourceCell": [
         650,
@@ -85,7 +85,7 @@
         0,
         0
       ],
-      "file": "surfaces/info-row.png",
+      "file": "surfaces/info-row.webp",
       "kind": "surface",
       "sourceCell": [
         30,
@@ -113,7 +113,7 @@
         0,
         0
       ],
-      "file": "surfaces/panel-frame.png",
+      "file": "surfaces/panel-frame.webp",
       "kind": "surface",
       "sourceCell": [
         640,
@@ -141,7 +141,7 @@
         0,
         0
       ],
-      "file": "icons/hint.png",
+      "file": "icons/hint.webp",
       "kind": "icon",
       "sourceCell": [
         80,
@@ -163,7 +163,7 @@
         0,
         0
       ],
-      "file": "icons/shuffle.png",
+      "file": "icons/shuffle.webp",
       "kind": "icon",
       "sourceCell": [
         450,
@@ -185,7 +185,7 @@
         0,
         0
       ],
-      "file": "icons/bomb.png",
+      "file": "icons/bomb.webp",
       "kind": "icon",
       "sourceCell": [
         850,
@@ -207,7 +207,7 @@
         0,
         0
       ],
-      "file": "icons/settings.png",
+      "file": "icons/settings.webp",
       "kind": "icon",
       "sourceCell": [
         70,
@@ -229,7 +229,7 @@
         0,
         0
       ],
-      "file": "icons/trophy.png",
+      "file": "icons/trophy.webp",
       "kind": "icon",
       "sourceCell": [
         450,
@@ -251,7 +251,7 @@
         0,
         0
       ],
-      "file": "icons/clock.png",
+      "file": "icons/clock.webp",
       "kind": "icon",
       "sourceCell": [
         850,
@@ -273,7 +273,7 @@
         0,
         0
       ],
-      "file": "icons/heart.png",
+      "file": "icons/heart.webp",
       "kind": "icon",
       "sourceCell": [
         70,
@@ -295,7 +295,7 @@
         0,
         0
       ],
-      "file": "icons/music.png",
+      "file": "icons/music.webp",
       "kind": "icon",
       "sourceCell": [
         470,
@@ -317,7 +317,7 @@
         0,
         0
       ],
-      "file": "icons/sound.png",
+      "file": "icons/sound.webp",
       "kind": "icon",
       "sourceCell": [
         850,

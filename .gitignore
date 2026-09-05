@@ -7,8 +7,12 @@ build/
 .gemini/
 .next/
 coverage/
+tmp/
 *.log
 .DS_Store
 .vercel
 design-assets/
 public/pikachu_ui_individual_assets_final*
+
+# Wink deployment evidence (local only)
+artifacts/

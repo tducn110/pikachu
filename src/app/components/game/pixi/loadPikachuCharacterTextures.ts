@@ -58,7 +58,8 @@ async function doLoad(): Promise<CharacterTextures> {
 }
 
 /** Throws if textures haven't been loaded yet (dev safety guard). */
-export function getPikachuCharacterTexture(
+// ponytail: internal only — no external consumer
+function getPikachuCharacterTexture(
   textures: CharacterTextures,
   characterId: string,
 ): Texture {

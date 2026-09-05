@@ -8,8 +8,8 @@
  *   New pack  → 9 unique chars (035 … 043),           atlas: pikachu_tile_characters_035_044_half_portrait_final
  *   ava1–10   → 1536×1024 layout images, no source reference → NOT tile characters
  *
- *   `044_panda_pointing.png` is intentionally excluded: it is a byte-for-byte
- *   duplicate of `038_goat_excited.png`, and no correct Panda source exists
+ *   `044_panda_pointing.webp` is intentionally excluded: it is a byte-for-byte
+ *   duplicate of `038_goat_excited.webp`, and no correct Panda source exists
  *   in this repository. It must not be reactivated without passing the asset
  *   integrity tests.
  *
@@ -67,15 +67,15 @@ export const PIKACHU_CHARACTERS: readonly CharacterDefinition[] = [
   { id: "legacy:10", pack: "legacy", frame: "tile_10_goofy_yellow_dragon", label: "Rồng vàng", iconScale: 1.10 },
   // ── New 035–044 pack (9 chars) — half-portrait crops need tighter scale ────
   // muscular doge is extremely large in the source portrait
-  { id: "new:035",   pack: "new",    frame: "035_doge_muscular.png",    label: "Doge cơ bắp",     iconScaleX: 0.82, iconScale: 0.96 },
-  { id: "new:036",   pack: "new",    frame: "036_buffalo_cheerful.png", label: "Buffalo vui vẻ" },
-  { id: "new:037",   pack: "new",    frame: "037_dinosaur_green.png",   label: "Khủng long xanh" },
-  { id: "new:038",   pack: "new",    frame: "038_goat_excited.png",     label: "Dê hướng khởi", iconScale: 1.07 },
-  { id: "new:039",   pack: "new",    frame: "039_bear_conical_hat.png", label: "Gấu nón lá", iconScale: 1.03 },
-  { id: "new:040",   pack: "new",    frame: "040_bear_bandaged.png",    label: "Gấu băng bó" },
-  { id: "new:041",   pack: "new",    frame: "041_frog_sad.png",         label: "Ế ch buồn" },
-  { id: "new:042",   pack: "new",    frame: "042_chicken_shocked.png",  label: "Gà giật mình", iconScale: 1.05 },
-  { id: "new:043",   pack: "new",    frame: "043_cat_tongue_out.png",   label: "Mèo le lưỡi", iconScale: 1.03 },
+  { id: "new:035",   pack: "new",    frame: "035_doge_muscular.webp",    label: "Doge cơ bắp",     iconScaleX: 0.82, iconScale: 0.96 },
+  { id: "new:036",   pack: "new",    frame: "036_buffalo_cheerful.webp", label: "Buffalo vui vẻ" },
+  { id: "new:037",   pack: "new",    frame: "037_dinosaur_green.webp",   label: "Khủng long xanh" },
+  { id: "new:038",   pack: "new",    frame: "038_goat_excited.webp",     label: "Dê hướng khởi", iconScale: 1.07 },
+  { id: "new:039",   pack: "new",    frame: "039_bear_conical_hat.webp", label: "Gấu nón lá", iconScale: 1.03 },
+  { id: "new:040",   pack: "new",    frame: "040_bear_bandaged.webp",    label: "Gấu băng bó" },
+  { id: "new:041",   pack: "new",    frame: "041_frog_sad.webp",         label: "Ế ch buồn" },
+  { id: "new:042",   pack: "new",    frame: "042_chicken_shocked.webp",  label: "Gà giật mình", iconScale: 1.05 },
+  { id: "new:043",   pack: "new",    frame: "043_cat_tongue_out.webp",   label: "Mèo le lưỡi", iconScale: 1.03 },
 ] as const;
 
 export const TOTAL_UNIQUE_CHARACTERS = PIKACHU_CHARACTERS.length; // 19

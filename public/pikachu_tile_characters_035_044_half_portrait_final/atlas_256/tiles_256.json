@@ -1,6 +1,6 @@
 {
   "frames": {
-    "035_doge_muscular.png": {
+    "035_doge_muscular.webp": {
       "frame": {
         "x": 0,
         "y": 0,
@@ -24,7 +24,7 @@
         "y": 0.5
       }
     },
-    "036_buffalo_cheerful.png": {
+    "036_buffalo_cheerful.webp": {
       "frame": {
         "x": 256,
         "y": 0,
@@ -48,7 +48,7 @@
         "y": 0.5
       }
     },
-    "037_dinosaur_green.png": {
+    "037_dinosaur_green.webp": {
       "frame": {
         "x": 512,
         "y": 0,
@@ -72,7 +72,7 @@
         "y": 0.5
       }
     },
-    "038_goat_excited.png": {
+    "038_goat_excited.webp": {
       "frame": {
         "x": 768,
         "y": 0,
@@ -96,7 +96,7 @@
         "y": 0.5
       }
     },
-    "039_bear_conical_hat.png": {
+    "039_bear_conical_hat.webp": {
       "frame": {
         "x": 0,
         "y": 256,
@@ -120,7 +120,7 @@
         "y": 0.5
       }
     },
-    "040_bear_bandaged.png": {
+    "040_bear_bandaged.webp": {
       "frame": {
         "x": 256,
         "y": 256,
@@ -144,7 +144,7 @@
         "y": 0.5
       }
     },
-    "041_frog_sad.png": {
+    "041_frog_sad.webp": {
       "frame": {
         "x": 512,
         "y": 256,
@@ -168,7 +168,7 @@
         "y": 0.5
       }
     },
-    "042_chicken_shocked.png": {
+    "042_chicken_shocked.webp": {
       "frame": {
         "x": 768,
         "y": 256,
@@ -192,7 +192,7 @@
         "y": 0.5
       }
     },
-    "043_cat_tongue_out.png": {
+    "043_cat_tongue_out.webp": {
       "frame": {
         "x": 0,
         "y": 512,
@@ -216,7 +216,7 @@
         "y": 0.5
       }
     },
-    "044_panda_pointing.png": {
+    "044_panda_pointing.webp": {
       "frame": {
         "x": 256,
         "y": 512,
@@ -244,7 +244,7 @@
   "meta": {
     "app": "pixi-packer-custom",
     "version": "1.0",
-    "image": "tiles_256.png",
+    "image": "tiles_256.webp",
     "format": "RGBA8888",
     "size": {
       "w": 1024,

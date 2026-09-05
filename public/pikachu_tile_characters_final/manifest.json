@@ -21,71 +21,71 @@
     {
       "id": 1,
       "name": "troll",
-      "source": "png_512/tile_01_troll.png",
-      "runtime": "png_256/tile_01_troll.png",
+      "source": "png_512/tile_01_troll.webp",
+      "runtime": "png_256/tile_01_troll.webp",
       "atlas_frame": "tile_01_troll"
     },
     {
       "id": 2,
       "name": "worried_panda",
-      "source": "png_512/tile_02_worried_panda.png",
-      "runtime": "png_256/tile_02_worried_panda.png",
+      "source": "png_512/tile_02_worried_panda.webp",
+      "runtime": "png_256/tile_02_worried_panda.webp",
       "atlas_frame": "tile_02_worried_panda"
     },
     {
       "id": 3,
       "name": "boxing_fox",
-      "source": "png_512/tile_03_boxing_fox.png",
-      "runtime": "png_256/tile_03_boxing_fox.png",
+      "source": "png_512/tile_03_boxing_fox.webp",
+      "runtime": "png_256/tile_03_boxing_fox.webp",
       "atlas_frame": "tile_03_boxing_fox"
     },
     {
       "id": 4,
       "name": "angry_rabbit",
-      "source": "png_512/tile_04_angry_rabbit.png",
-      "runtime": "png_256/tile_04_angry_rabbit.png",
+      "source": "png_512/tile_04_angry_rabbit.webp",
+      "runtime": "png_256/tile_04_angry_rabbit.webp",
       "atlas_frame": "tile_04_angry_rabbit"
     },
     {
       "id": 5,
       "name": "sleepy_bear_ball",
-      "source": "png_512/tile_05_sleepy_bear_ball.png",
-      "runtime": "png_256/tile_05_sleepy_bear_ball.png",
+      "source": "png_512/tile_05_sleepy_bear_ball.webp",
+      "runtime": "png_256/tile_05_sleepy_bear_ball.webp",
       "atlas_frame": "tile_05_sleepy_bear_ball"
     },
     {
       "id": 6,
       "name": "smug_brown_bear",
-      "source": "png_512/tile_06_smug_brown_bear.png",
-      "runtime": "png_256/tile_06_smug_brown_bear.png",
+      "source": "png_512/tile_06_smug_brown_bear.webp",
+      "runtime": "png_256/tile_06_smug_brown_bear.webp",
       "atlas_frame": "tile_06_smug_brown_bear"
     },
     {
       "id": 7,
       "name": "goofy_tiger",
-      "source": "png_512/tile_07_goofy_tiger.png",
-      "runtime": "png_256/tile_07_goofy_tiger.png",
+      "source": "png_512/tile_07_goofy_tiger.webp",
+      "runtime": "png_256/tile_07_goofy_tiger.webp",
       "atlas_frame": "tile_07_goofy_tiger"
     },
     {
       "id": 8,
       "name": "green_gift_mascot",
-      "source": "png_512/tile_08_green_gift_mascot.png",
-      "runtime": "png_256/tile_08_green_gift_mascot.png",
+      "source": "png_512/tile_08_green_gift_mascot.webp",
+      "runtime": "png_256/tile_08_green_gift_mascot.webp",
       "atlas_frame": "tile_08_green_gift_mascot"
     },
     {
       "id": 9,
       "name": "lion_dance",
-      "source": "png_512/tile_09_lion_dance.png",
-      "runtime": "png_256/tile_09_lion_dance.png",
+      "source": "png_512/tile_09_lion_dance.webp",
+      "runtime": "png_256/tile_09_lion_dance.webp",
       "atlas_frame": "tile_09_lion_dance"
     },
     {
       "id": 10,
       "name": "goofy_yellow_dragon",
-      "source": "png_512/tile_10_goofy_yellow_dragon.png",
-      "runtime": "png_256/tile_10_goofy_yellow_dragon.png",
+      "source": "png_512/tile_10_goofy_yellow_dragon.webp",
+      "runtime": "png_256/tile_10_goofy_yellow_dragon.webp",
       "atlas_frame": "tile_10_goofy_yellow_dragon"
     }
   ]

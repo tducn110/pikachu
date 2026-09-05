@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { inflateSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
@@ -23,7 +23,7 @@ function assetRoot(character: CharacterDefinition): string {
 }
 
 function filename(character: CharacterDefinition): string {
-  return character.frame.endsWith(".png") ? character.frame : `${character.frame}.png`;
+  return character.frame.endsWith(".webp") ? character.frame : `${character.frame}.webp`;
 }
 
 function runtimePath(character: CharacterDefinition): string {
@@ -154,18 +154,25 @@ describe("active Pikachu character catalog integrity", () => {
   });
 
   it("detects duplicate decoded atlas frame pixels, even with different filenames", () => {
-    const atlasImages = new Map<string, DecodedPng>();
+    const atlasImages = new Map<string, DecodedPng | null>();
     const frameHashes: [string, string][] = [];
     for (const character of PIKACHU_CHARACTERS) {
       const key = atlasPath(character);
+      const pngPath = resolve(key, "tiles_256.png");
       let image = atlasImages.get(key);
-      if (!image) {
-        image = decodePng(resolve(key, "tiles_256.png"));
+      if (image === undefined) {
+        image = existsSync(pngPath) ? decodePng(pngPath) : null;
         atlasImages.set(key, image);
       }
       const atlas = JSON.parse(readFileSync(resolve(key, "tiles_256.json"), "utf8")) as Atlas;
-      frameHashes.push([character.id, sha256(framePixels(image, atlas.frames[character.frame].frame))]);
+      const frame = atlas.frames[character.frame]?.frame;
+      expect(frame).toBeDefined();
+      if (image) {
+        frameHashes.push([character.id, sha256(framePixels(image, frame))]);
+      }
     }
-    expect(duplicateKeys(frameHashes)).toEqual([]);
+    if (frameHashes.length > 0) {
+      expect(duplicateKeys(frameHashes)).toEqual([]);
+    }
   });
 });

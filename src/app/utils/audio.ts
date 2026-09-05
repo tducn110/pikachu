@@ -108,12 +108,5 @@ export function unlockAudio(): void {
   }
 }
 
-export function destroyAudio(): void {
-  disposed = true;
-  for (const sound of Object.values(sfxBank)) sound?.unload();
-  sfxBank = {};
-  bgm?.unload();
-  bgm = null;
-  musicRequested = false;
-  sfxEnabled = true;
-}
+
+export function muteAll(): void { Howler.mute(true); } export function unmuteAll(): void { Howler.mute(false); }

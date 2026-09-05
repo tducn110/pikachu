@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { HyperModal } from "./overlays/HyperModal";
 import { RewardAdButton } from "./ui/RewardAdButton";
 import { HyperModalButton } from "./ui/HyperModalButton";
@@ -8,13 +9,16 @@ interface AdPromptOverlayProps {
   itemType: "hint" | "shuffle" | "bomb";
   onConfirm: () => void;
   onCancel: () => void;
+  onAdStart?: () => void;
+  onAdEnd?: () => void;
 }
 
-export function AdPromptOverlay({ itemType, onConfirm, onCancel }: AdPromptOverlayProps) {
+export function AdPromptOverlay({ itemType, onConfirm, onCancel, onAdStart, onAdEnd }: AdPromptOverlayProps) {
+  const { t } = useTranslation();
   const itemNames = {
-    hint: "Gợi ý",
-    shuffle: "Đảo bàn",
-    bomb: "Bom phá"
+    hint: t("hint", "Gợi ý"),
+    shuffle: t("shuffle", "Đảo bàn"),
+    bomb: t("bomb", "Bom phá")
   };
 
   return (
@@ -24,22 +28,24 @@ export function AdPromptOverlay({ itemType, onConfirm, onCancel }: AdPromptOverl
       </div>
       
       <h2 className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-2">
-        THÊM {itemNames[itemType]}
+        {t("add_item", "THÊM")} {itemNames[itemType]}
       </h2>
       
       <div className="text-[var(--hyper-ink)] text-lg font-bold mb-6 px-2">
-        +1 lượt
+        {t("plus_1_turn", "+1 lượt")}
       </div>
 
       <div className="flex flex-col w-full gap-3 mt-auto">
         <RewardAdButton 
           rewardType="support" 
           onSuccess={onConfirm} 
-          label="XEM QUẢNG CÁO" 
-          subLabel="+1 LƯỢT" 
+          label={t("watch_ad", "XEM QUẢNG CÁO")}
+          subLabel={t("plus_1_turn_caps", "+1 LƯỢT")}
+          beforeAd={onAdStart}
+          afterAd={onAdEnd}
         />
         <HyperModalButton onClick={onCancel} variant="secondary">
-          Để sau
+          {t("maybe_later", "Để sau")}
         </HyperModalButton>
       </div>
     </HyperModal>

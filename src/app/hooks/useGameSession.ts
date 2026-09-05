@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { type ScoreStats, loadStats, saveStats } from "../utils/stats";
+import { type ScoreStats } from "../utils/stats";
 import { getBoardSize, MAX_BOARD_LEVEL } from "../utils/pairMatchLogic";
 
 export type GameStatus = "playing" | "won" | "lost" | "revive";
@@ -16,8 +16,7 @@ export function useGameSession() {
   const [hasRevived, setHasRevived] = useState(false);
   
   const getLevelMaxTime = (level: number) => {
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-  const { rows, cols } = getBoardSize(level, isMobile);
+    const { rows, cols } = getBoardSize(level);
   const pairs = (rows * cols) / 2;
   // Dynamic time scaling based on number of pairs and level
   return Math.max(45, Math.floor(pairs * 3) + Math.max(0, 30 - level));
@@ -28,7 +27,11 @@ export function useGameSession() {
   const [timeLeft, setTimeLeft] = useState(currentMaxTime);
   const [status, setStatus] = useState<GameStatus>("playing");
   const [loseReason, setLoseReason] = useState<LoseReason | null>(null);
-  const [stats, setStats] = useState<ScoreStats>(() => loadStats());
+  const [stats, setStats] = useState<ScoreStats>({
+    best: 0,
+    last: 0,
+    totalGames: 0,
+  });
 
   const addScore = useCallback((points: number) => {
     setScore((s) => Math.max(0, s + points));
@@ -65,7 +68,6 @@ export function useGameSession() {
         last: score,
         totalGames: prev.totalGames + 1,
       };
-      saveStats(updated);
       return updated;
     });
   }, [score]);
@@ -79,7 +81,6 @@ export function useGameSession() {
         last: score,
         totalGames: prev.totalGames + 1,
       };
-      saveStats(updated);
       return updated;
     });
   }, [score]);
@@ -114,7 +115,6 @@ export function useGameSession() {
           best: Math.max(prev.best, next),
           last: next,
         };
-        saveStats(updated);
         return updated;
       });
       return next;

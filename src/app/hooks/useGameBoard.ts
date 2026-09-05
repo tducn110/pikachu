@@ -31,8 +31,7 @@ export function resolveCharacterIds(
 
 export function useGameBoard(initialLevel: number = 1, characterIds: readonly string[] = []) {
   const [tiles, setTiles] = useState<PairTile[]>(() => {
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-    const { rows, cols } = getBoardSize(initialLevel, isMobile);
+        const { rows, cols } = getBoardSize(initialLevel);
     return createPairBoard(resolveCharacterIds(undefined, characterIds), rows, cols);
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -41,8 +40,7 @@ export function useGameBoard(initialLevel: number = 1, characterIds: readonly st
   const [activePath, setActivePath] = useState<Point[] | null>(null);
 
   const resetBoard = useCallback((level: number, ids?: readonly string[]) => {
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
-    const { rows, cols } = getBoardSize(level, isMobile);
+        const { rows, cols } = getBoardSize(level);
     setTiles(createPairBoard(resolveCharacterIds(ids, characterIds), rows, cols));
     setSelectedIds([]);
     setWrongIds([]);
@@ -63,7 +61,6 @@ export function useGameBoard(initialLevel: number = 1, characterIds: readonly st
       return false;
     }
 
-    let changed = false;
     setTiles((prev) => {
       return perfDiagnostics.measure("pikachu.autoShuffleCheck", () => {
         if (prev !== tiles && (isBoardCleared(prev) || hasAnyMatch(prev, rows, cols))) {
@@ -71,7 +68,6 @@ export function useGameBoard(initialLevel: number = 1, characterIds: readonly st
         }
 
         let nextBoard = shuffleRemaining(prev);
-        changed = true;
         let attempts = 0;
         while (!hasAnyMatch(nextBoard, rows, cols) && attempts < 50) {
           nextBoard = shuffleRemaining(nextBoard);
@@ -81,8 +77,9 @@ export function useGameBoard(initialLevel: number = 1, characterIds: readonly st
         return nextBoard;
       });
     });
-    changed = true;
-    return changed;
+    // ponytail: We passed the guard → shuffle was committed. Return true so
+    // caller knows to not re-trigger the check on the same tick.
+    return true;
   }, [tiles]);
 
   return {

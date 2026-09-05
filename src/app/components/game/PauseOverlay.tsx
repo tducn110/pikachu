@@ -1,5 +1,6 @@
 import React from "react";
-import { Play, RotateCcw, Volume2, VolumeX, Music } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Play, Volume2, VolumeX, Music } from "lucide-react";
 import { playSfx } from "../../utils/audio";
 import { HyperIcon } from "./hyperUi";
 import { HyperModal } from "./overlays/HyperModal";
@@ -7,23 +8,22 @@ import { HyperModalButton } from "./ui/HyperModalButton";
 
 export function PauseOverlay({
   onClose,
-  onRestart,
   sfxEnabled,
   musicEnabled,
   setSfxEnabled,
   setMusicEnabled,
 }: {
   onClose: () => void;
-  onRestart: () => void;
   sfxEnabled: boolean;
   musicEnabled: boolean;
   setSfxEnabled: (v: boolean) => void;
   setMusicEnabled: (v: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <HyperModal offsetTop>
       <h2 className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-6 mt-2 shadow-text">
-        TẠM DỪNG
+        {t("pause", "TẠM DỪNG")}
       </h2>
 
       <div className="w-full mb-4">
@@ -34,22 +34,12 @@ export function PauseOverlay({
         >
           <div className="flex items-center gap-2">
             <Play size={24} strokeWidth={3} />
-            <span className="text-xl">TIẾP TỤC</span>
+            <span className="text-xl">{t("continue", "TIẾP TỤC")}</span>
           </div>
         </HyperModalButton>
       </div>
 
       <div className="flex w-full justify-center sm:justify-between gap-3 sm:gap-4 mt-2 px-0 sm:px-2">
-        <button 
-          className="flex flex-col items-center gap-1 opacity-90 hover:opacity-100 transition-transform active:scale-95"
-          onClick={() => { playSfx("click"); onRestart(); onClose(); }}
-        >
-          <div className="w-14 h-14 rounded-full bg-[var(--hyper-gold)] flex items-center justify-center shadow-lg border-2 border-[var(--hyper-brown)]">
-            <RotateCcw size={26} strokeWidth={3} className="text-[var(--hyper-brown)]" />
-          </div>
-          <span className="text-[var(--hyper-purple-ink)] font-bold text-sm">Chơi lại</span>
-        </button>
-
         <button 
           className={`flex flex-col items-center gap-1 transition-transform active:scale-95 ${!sfxEnabled ? 'opacity-50 grayscale' : 'opacity-90 hover:opacity-100'}`}
           onClick={() => { playSfx("toggle"); setSfxEnabled(!sfxEnabled); }}
@@ -61,7 +51,7 @@ export function PauseOverlay({
               <VolumeX size={26} strokeWidth={3} className="text-[var(--hyper-brown)]" />
             )}
           </div>
-          <span className="text-[var(--hyper-purple-ink)] font-bold text-sm">Âm thanh</span>
+          <span className="text-[var(--hyper-purple-ink)] font-bold text-sm">{t("sfx", "Âm thanh")}</span>
         </button>
 
         <button 
@@ -71,7 +61,7 @@ export function PauseOverlay({
           <div className="w-14 h-14 rounded-full bg-[var(--hyper-gold)] flex items-center justify-center shadow-lg border-2 border-[var(--hyper-brown)]">
             <Music size={26} strokeWidth={3} className="text-[var(--hyper-brown)]" />
           </div>
-          <span className="text-[var(--hyper-purple-ink)] font-bold text-sm">Nhạc</span>
+          <span className="text-[var(--hyper-purple-ink)] font-bold text-sm">{t("music", "Nhạc nền")}</span>
         </button>
       </div>
     </HyperModal>

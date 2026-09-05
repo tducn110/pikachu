@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { type UsePairMatchGame } from "../../hooks/usePairMatchGame";
 import { HyperModal } from "./overlays/HyperModal";
 import { RewardAdButton } from "./ui/RewardAdButton";
@@ -10,6 +11,7 @@ interface ReviveOverlayProps {
 }
 
 export function ReviveOverlay({ game }: ReviveOverlayProps) {
+  const { t } = useTranslation();
   const handleGiveUp = () => {
     game.setLost("no_lives");
   };
@@ -25,17 +27,17 @@ export function ReviveOverlay({ game }: ReviveOverlayProps) {
       </div>
       
       <h2 className="text-2xl font-black text-[var(--hyper-purple-ink)] uppercase mb-6">
-        BẠN ĐÃ THUA!
+        {t("you_lose", "BẠN ĐÃ THUA!")}
       </h2>
 
       <div className="flex flex-col w-full gap-3 mt-auto">
         <RewardAdButton 
           rewardType="revive" 
           onSuccess={handleRevive} 
-          label="HỒI SINH" 
+          label={t("revive_upper", "HỒI SINH")}
         />
         <HyperModalButton onClick={handleGiveUp} variant="secondary">
-          Bỏ cuộc
+          {t("give_up", "Bỏ cuộc")}
         </HyperModalButton>
       </div>
     </HyperModal>

@@ -22,7 +22,11 @@ export const BOARD_SIZES_MOBILE = [
   { cols: 8, rows: 10 }, // 80
 ] as const;
 
-export function getBoardSize(level: number, isMobile = false) {
+export function getIsMobile(): boolean {
+  return typeof window !== "undefined" && window.innerWidth < 1024;
+}
+
+export function getBoardSize(level: number, isMobile = getIsMobile()) {
   if (isMobile) {
     // 2 levels per size
     const sizeIndex = Math.max(0, Math.floor((level - 1) / 2));

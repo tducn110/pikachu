@@ -1,16 +1,23 @@
 export type RewardType = "revive" | "support" | "x2";
 export type AdResult = "success" | "cancelled" | "failed";
 
-/**
- * Mocks an ad request. Later this can be replaced by Wink API or any real ad network.
- * @param rewardType the reason for requesting the rewarded ad.
- * @returns a promise resolving to "success", "cancelled", or "failed".
- */
-export async function requestRewardedAd(rewardType: RewardType): Promise<AdResult> {
-  return new Promise((resolve) => {
-    // Simulate network delay / ad playing
-    setTimeout(() => {
-      resolve("success");
-    }, 1000);
-  });
+export async function requestRewardedAd(
+  rewardType: RewardType,
+  options?: { beforeAd?: () => void; afterAd?: () => void }
+): Promise<AdResult> {
+  options?.beforeAd?.();
+  options?.afterAd?.();
+  return "success";
+}
+
+/** Show an interstitial at a natural transition (next level, restart).
+ *  ponytail: fail-open — transition always continues regardless of ad outcome. */
+export async function requestInterstitialAd(options: {
+  type: "next" | "start" | "pause" | "browse";
+  name: string;
+  beforeAd?: () => void;
+  afterAd?: () => void;
+}): Promise<void> {
+  options.beforeAd?.();
+  options.afterAd?.();
 }
