@@ -5,8 +5,8 @@ const LANGUAGE_STORAGE_KEY = 'fruit-slashing-language';
 type SupportedLanguage = 'vi' | 'en';
 const isSupportedLanguage = (value: string | null): value is SupportedLanguage => value === 'vi' || value === 'en';
 const getInitialLanguage = (): SupportedLanguage => {
-  if (typeof window === 'undefined') return 'vi';
-  try { const value = window.localStorage.getItem(LANGUAGE_STORAGE_KEY); return isSupportedLanguage(value) ? value : 'vi'; } catch { return 'vi'; }
+  if (typeof window === 'undefined') return 'en';
+  try { const value = window.localStorage.getItem(LANGUAGE_STORAGE_KEY); return isSupportedLanguage(value) ? value : 'en'; } catch { return 'en'; }
 };
 const persistLanguage = (language: string): void => {
   const normalized = language.split('-')[0];
@@ -35,6 +35,7 @@ const resources = {
       on: "Bật",
       off: "Tắt",
       language: "Ngôn ngữ",
+      change_language: "Đổi ngôn ngữ",
       loading: "Đang tải...",
       error: "Đã xảy ra lỗi",
       retry: "Thử lại",
@@ -65,6 +66,7 @@ const resources = {
       on: "On",
       off: "Off",
       language: "Language",
+      change_language: "Change language",
       loading: "Loading...",
       error: "An error occurred",
       retry: "Retry",
@@ -83,7 +85,7 @@ i18n
     resources,
     lng: getInitialLanguage(),
     supportedLngs: ['vi', 'en'],
-    fallbackLng: "vi",
+    fallbackLng: "en",
     interpolation: {
       escapeValue: false
     }
