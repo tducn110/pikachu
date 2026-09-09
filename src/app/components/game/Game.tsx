@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { playSfx } from "../../utils/audio";
 import { requestInterstitialAd } from "../../utils/ads";
 import { usePairMatchGame } from "../../hooks/usePairMatchGame";
-import { getBoardSize } from "../../utils/pairMatchLogic";
+import { useGameLifecycle } from "../../hooks/useGameLifecycle";
 import { GameBoard } from "./GameBoard";
 import { PauseOverlay } from "./PauseOverlay";
 import { DashboardScreen } from "../screens/DashboardScreen";
@@ -18,40 +18,67 @@ import { Pause } from "lucide-react";
 
 export function Game() {
   const { t } = useTranslation();
-  const [showPause, setShowPause] = useState(false);
+  const [manualPause, setManualPause] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
   const [adPromptItem, setAdPromptItem] = useState<"hint" | "shuffle" | "bomb" | null>(null);
+  const [isAdPlaying, setIsAdPlaying] = useState(false);
+  const lifecycle = useGameLifecycle();
 
-  // Single source of truth: anything that should freeze the game timer + input
-  const isPaused = showPause || showDashboard || adPromptItem !== null;
+  // One pause value reaches gameplay, Pixi rendering, and audio policy.
+  const showPause = manualPause || lifecycle.pauseReason !== null;
+  const isPaused = showPause || showDashboard || adPromptItem !== null || lifecycle.hostPaused || lifecycle.backgroundPaused;
 
   const game = usePairMatchGame({
     isPaused,
+    isAdPlaying,
+    parentMuted: lifecycle.parentMuted,
   });
-  const boardSize = getBoardSize(game.level);
-  const totalPairs = (boardSize.rows * boardSize.cols) / 2;
+
+  const handleAdStart = useCallback(() => {
+    setIsAdPlaying(true);
+  }, []);
+
+  const handleAdEnd = useCallback(() => {
+    setIsAdPlaying(false);
+  }, []);
 
   const handleRestart = () => {
+    handleAdStart();
     void requestInterstitialAd({
       type: "start",
       name: "restart_game",
-    }).then(() => game.resetGame());
+    }).finally(() => {
+      handleAdEnd();
+      game.resetGame();
+    });
   };
 
   // Interstitial between levels — transition always continues regardless of ad outcome
   const handleNextLevel = () => {
+    handleAdStart();
     void requestInterstitialAd({
       type: "next",
       name: "level_complete",
-    }).then(() => game.nextLevel());
+    }).finally(() => {
+      handleAdEnd();
+      game.nextLevel();
+    });
   };
 
   const handleCloseDashboard = () => {
     setShowDashboard(false);
   };
 
+  const handleContinue = () => {
+    if (!lifecycle.acknowledgePause()) return;
+    setManualPause(false);
+    game.resumeAudioFromUserGesture();
+  };
+
   const handleSupportRequest = (type: "hint" | "shuffle" | "bomb", action: () => void) => {
     if (game.supportStock[type] <= 0) {
+      // ponytail: click feedback on prompt open when stock depleted
+      playSfx("click");
       setAdPromptItem(type);
     } else {
       action();
@@ -78,7 +105,7 @@ export function Game() {
               score={game.score}
               lives={game.lives}
               onDashboard={() => setShowDashboard(true)}
-              onSettings={() => setShowPause(true)}
+              onSettings={() => setManualPause(true)}
             />
 
             <div className="hyper-game-layout flex min-h-0 min-w-0 flex-1 flex-col lg:grid">
@@ -134,8 +161,8 @@ export function Game() {
                         <HyperIcon name="trophy" className="hyper-action-orb-icon" />
                       </button>
                       <button
-                        type="button"
-                        onClick={() => { playSfx("click"); setShowPause(true); }}
+                          type="button"
+                        onClick={() => { playSfx("click"); setManualPause(true); }}
                         className="hyper-action-orb flex items-center justify-center"
                         aria-label={t("pause", "Tạm dừng")}
                       >
@@ -156,30 +183,16 @@ export function Game() {
                   onSelect={game.selectTile}
                   level={game.level}
                   combo={game.combo}
+                  isPaused={isPaused}
                 />
                 {game.wrongIds.length === 2 && game.wrongReason && <WrongToast reason={game.wrongReason} />}
                 {game.shuffleNotice && <ShuffleToast />}
-                {game.status === "won" && (
-                  <WinOverlay score={game.score} onNextLevel={handleNextLevel} onShowScores={() => setShowDashboard(true)} game={game} />
-                )}
-                {game.status === "lost" && <LoseOverlay score={game.score} onPlayAgain={handleRestart} game={game} reason={game.loseReason} />}
-                {game.status === "revive" && <ReviveOverlay game={game} />}
-                {adPromptItem && (
-                  <AdPromptOverlay
-                    itemType={adPromptItem}
-                    onConfirm={() => {
-                      game.addSupport(adPromptItem);
-                      setAdPromptItem(null);
-                    }}
-                    onCancel={() => setAdPromptItem(null)}
-                  />
-                )}
               </div>
             </div>
           </div>
 
           {/* Mobile Power-up Footer */}
-          <div className="lg:hidden mt-2 flex justify-center items-center shrink-0">
+          <div className="mobile-power-up-footer lg:hidden mt-2 flex justify-center items-center shrink-0">
             <div className="hyper-panel flex items-center justify-center gap-6 px-6 py-3 rounded-[2rem] border-2 border-[#d2aa6f] shadow-xl">
               <SupportButton compact iconName="hint" label={t("hint", "Gợi ý")} stock={game.supportStock.hint} onClick={doHint} />
               <SupportButton compact iconName="shuffle" label={t("shuffle", "Đảo")} stock={game.supportStock.shuffle} onClick={doShuffle} />
@@ -191,11 +204,13 @@ export function Game() {
 
       {showPause && (
         <PauseOverlay
-          onClose={() => setShowPause(false)}
+          onClose={handleContinue}
           sfxEnabled={game.sfxEnabled}
           musicEnabled={game.musicEnabled}
           setSfxEnabled={game.setSfxEnabled}
           setMusicEnabled={game.setMusicEnabled}
+          pauseReason={lifecycle.pauseReason}
+          canContinue={lifecycle.canContinue}
         />
       )}
       {showDashboard && (
@@ -203,6 +218,45 @@ export function Game() {
           score={game.score}
           stats={game.stats}
           onClose={handleCloseDashboard}
+        />
+      )}
+      {game.status === "won" && (
+        <WinOverlay
+          score={game.score}
+          onNextLevel={handleNextLevel}
+          onShowScores={() => setShowDashboard(true)}
+          game={game}
+          onAdStart={handleAdStart}
+          onAdEnd={handleAdEnd}
+        />
+      )}
+      {game.status === "lost" && (
+        <LoseOverlay
+          score={game.score}
+          onPlayAgain={handleRestart}
+          game={game}
+          reason={game.loseReason}
+          onAdStart={handleAdStart}
+          onAdEnd={handleAdEnd}
+        />
+      )}
+      {game.status === "revive" && (
+        <ReviveOverlay
+          game={game}
+          onAdStart={handleAdStart}
+          onAdEnd={handleAdEnd}
+        />
+      )}
+      {adPromptItem && (
+        <AdPromptOverlay
+          itemType={adPromptItem}
+          onConfirm={() => {
+            game.addSupport(adPromptItem);
+            setAdPromptItem(null);
+          }}
+          onCancel={() => setAdPromptItem(null)}
+          onAdStart={handleAdStart}
+          onAdEnd={handleAdEnd}
         />
       )}
     </main>

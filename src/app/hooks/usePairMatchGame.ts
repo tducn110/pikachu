@@ -40,6 +40,7 @@ export interface UsePairMatchGame {
   musicEnabled: boolean;
   setSfxEnabled: (v: boolean) => void;
   setMusicEnabled: (v: boolean) => void;
+  resumeAudioFromUserGesture: () => void;
   selectTile: (tileId: string) => void;
   resetGame: () => void;
   nextLevel: () => void;
@@ -54,16 +55,23 @@ export interface UsePairMatchGame {
 
 export function usePairMatchGame({
   isPaused = false,
+  isAdPlaying = false,
   parentMuted = false,
   onRoundStart,
 }: {
   isPaused?: boolean;
+  isAdPlaying?: boolean;
   parentMuted?: boolean;
   onRoundStart?: () => void;
 } = {}): UsePairMatchGame {
-  const audio = useGameAudio(parentMuted);
   const session = useGameSession();
   const board = useGameBoard();
+  const shouldPlayBgm = session.status === "playing" && !isPaused && !isAdPlaying;
+  const audio = useGameAudio({
+    parentMuted,
+    paused: isPaused || isAdPlaying,
+    shouldPlayBgm,
+  });
   const [shuffleNotice, setShuffleNotice] = useState(false);
   const [wrongReason, setWrongReason] = useState<"different-kind" | "blocked-path" | null>(null);
   const [supportStock, setSupportStock] = useState({ hint: 1, shuffle: 1, bomb: 1 });
@@ -75,27 +83,77 @@ export function usePairMatchGame({
   const lockRef = useRef(false);
   const wonRef = useRef(false);
   const runIdRef = useRef(0);
-  const timeoutIdsRef = useRef(new Set<ReturnType<typeof setTimeout>>());
+  const isPausedRef = useRef(isPaused);
+  const scheduledTasksRef = useRef(new Map<number, {
+    callback: () => void;
+    remaining: number;
+    runId: number;
+    startedAt: number | null;
+    timeoutId: ReturnType<typeof setTimeout> | null;
+  }>());
+  const nextTaskIdRef = useRef(0);
+
+  const startScheduledTask = useCallback((taskId: number) => {
+    const task = scheduledTasksRef.current.get(taskId);
+    if (!task || isPausedRef.current || task.timeoutId !== null) return;
+    task.startedAt = Date.now();
+    task.timeoutId = setTimeout(() => {
+      const current = scheduledTasksRef.current.get(taskId);
+      if (!current) return;
+      if (isPausedRef.current) {
+        const pausedAt = Date.now();
+        current.remaining = Math.max(0, current.remaining - (pausedAt - (current.startedAt ?? pausedAt)));
+        current.timeoutId = null;
+        current.startedAt = null;
+        return;
+      }
+      scheduledTasksRef.current.delete(taskId);
+      if (runIdRef.current === current.runId) current.callback();
+    }, task.remaining);
+  }, []);
 
   const scheduleForCurrentRun = useCallback((callback: () => void, delay: number) => {
-    const runId = runIdRef.current;
-    const timeoutId = setTimeout(() => {
-      timeoutIdsRef.current.delete(timeoutId);
-      if (runIdRef.current === runId) callback();
-    }, delay);
-    timeoutIdsRef.current.add(timeoutId);
-  }, []);
+    const taskId = nextTaskIdRef.current++;
+    scheduledTasksRef.current.set(taskId, {
+      callback,
+      remaining: delay,
+      runId: runIdRef.current,
+      startedAt: null,
+      timeoutId: null,
+    });
+    startScheduledTask(taskId);
+  }, [startScheduledTask]);
+
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+    if (isPaused) {
+      const pausedAt = Date.now();
+      for (const task of scheduledTasksRef.current.values()) {
+        if (task.timeoutId === null || task.startedAt === null) continue;
+        clearTimeout(task.timeoutId);
+        task.remaining = Math.max(0, task.remaining - (pausedAt - task.startedAt));
+        task.timeoutId = null;
+        task.startedAt = null;
+      }
+      return;
+    }
+    for (const taskId of scheduledTasksRef.current.keys()) startScheduledTask(taskId);
+  }, [isPaused, startScheduledTask]);
 
   const invalidateRun = useCallback(() => {
     runIdRef.current += 1;
-    for (const timeoutId of timeoutIdsRef.current) clearTimeout(timeoutId);
-    timeoutIdsRef.current.clear();
+    for (const task of scheduledTasksRef.current.values()) {
+      if (task.timeoutId !== null) clearTimeout(task.timeoutId);
+    }
+    scheduledTasksRef.current.clear();
     lockRef.current = false;
   }, []);
 
   useEffect(() => () => {
-    for (const timeoutId of timeoutIdsRef.current) clearTimeout(timeoutId);
-    timeoutIdsRef.current.clear();
+    for (const task of scheduledTasksRef.current.values()) {
+      if (task.timeoutId !== null) clearTimeout(task.timeoutId);
+    }
+    scheduledTasksRef.current.clear();
   }, []);
 
   const remainingPairs = getRemainingPairs(board.tiles);
@@ -314,6 +372,7 @@ export function usePairMatchGame({
     musicEnabled: audio.musicEnabled,
     setSfxEnabled: audio.setSfxEnabled,
     setMusicEnabled: audio.setMusicEnabled,
+    resumeAudioFromUserGesture: audio.resumeFromUserGesture,
     selectTile,
     resetGame,
     nextLevel,

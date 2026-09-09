@@ -1,17 +1,21 @@
 import { useState, useCallback, useEffect } from "react";
-import { type Sfx, type UiSound, playSfx, setSfxEnabled as setAudioSfxEnabled, toggleBgm, unlockAudio } from "../utils/audio";
+import { type Sfx, type UiSound, playSfx, setAudioPolicy, unlockAudio } from "../utils/audio";
 
-export function useGameAudio(parentMuted = false) {
+export function useGameAudio({
+  parentMuted = false,
+  paused = false,
+  shouldPlayBgm = true,
+}: {
+  parentMuted?: boolean;
+  paused?: boolean;
+  shouldPlayBgm?: boolean;
+} = {}) {
   const [sfxEnabled, setSfxEnabled] = useState(true);
   const [musicEnabled, setMusicEnabled] = useState(true);
 
   useEffect(() => {
-    setAudioSfxEnabled(sfxEnabled && !parentMuted);
-  }, [sfxEnabled, parentMuted]);
-
-  useEffect(() => {
-    toggleBgm(musicEnabled && !parentMuted);
-  }, [musicEnabled, parentMuted]);
+    setAudioPolicy({ sfxEnabled, musicEnabled, parentMuted, paused, shouldPlayBgm });
+  }, [sfxEnabled, musicEnabled, parentMuted, paused, shouldPlayBgm]);
 
   useEffect(() => {
     const unlock = () => unlockAudio();
@@ -20,20 +24,19 @@ export function useGameAudio(parentMuted = false) {
     return () => {
       window.removeEventListener("pointerdown", unlock);
       window.removeEventListener("keydown", unlock);
-      toggleBgm(false);
+      setAudioPolicy({ paused: true });
     };
   }, []);
 
   const setMusic = useCallback((value: boolean) => {
-    unlockAudio();
     setMusicEnabled(value);
-    toggleBgm(value && !parentMuted);
-  }, [parentMuted]);
+    setAudioPolicy({ musicEnabled: value });
+  }, []);
 
   const setSfx = useCallback((value: boolean) => {
     setSfxEnabled(value);
-    setAudioSfxEnabled(value && !parentMuted);
-  }, [parentMuted]);
+    setAudioPolicy({ sfxEnabled: value });
+  }, []);
 
   const sfx = useCallback(
     (type: Sfx) => {
@@ -49,5 +52,18 @@ export function useGameAudio(parentMuted = false) {
     [sfxEnabled],
   );
 
-  return { sfxEnabled, setSfxEnabled: setSfx, musicEnabled, setMusicEnabled: setMusic, sfx, ui };
+  const resumeFromUserGesture = useCallback(() => {
+    unlockAudio();
+    setAudioPolicy({ paused: false, shouldPlayBgm: true });
+  }, []);
+
+  return {
+    sfxEnabled,
+    setSfxEnabled: setSfx,
+    musicEnabled,
+    setMusicEnabled: setMusic,
+    sfx,
+    ui,
+    resumeFromUserGesture,
+  };
 }

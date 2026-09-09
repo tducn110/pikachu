@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { type ScoreStats } from "../utils/stats";
 import { getBoardSize, MAX_BOARD_LEVEL } from "../utils/pairMatchLogic";
 
@@ -85,20 +85,19 @@ export function useGameSession() {
     });
   }, [score]);
   const removeLife = useCallback(() => {
-    setLives((l) => {
-      const next = Math.max(0, l - 1);
-      if (next === 0) {
-        if (hasRevived) {
-          setTimeout(() => {
-            setLost("no_lives");
-          }, 0);
-        } else {
-          setStatus("revive");
-        }
+    setLives((l) => Math.max(0, l - 1));
+  }, []);
+
+  // ponytail: handle zero-lives transition outside state updater to preserve pure React updates
+  useEffect(() => {
+    if (status === "playing" && lives === 0) {
+      if (hasRevived) {
+        setLost("no_lives");
+      } else {
+        setStatus("revive");
       }
-      return next;
-    });
-  }, [hasRevived, setLost]);
+    }
+  }, [lives, status, hasRevived, setLost]);
 
   const revive = useCallback((hearts: number) => {
     setLives(hearts);

@@ -57,31 +57,27 @@ export function LoseOverlay({
         {displayScore}
       </div>
 
-      <div className="flex flex-col sm:flex-row w-full gap-3 mt-auto">
+      <div className="flex flex-col w-full gap-3 mt-auto">
         {!doubleClaimed && (
-          <div className="flex-1">
-            <RewardAdButton 
-              rewardType="x2" 
-              onSuccess={handleDoubleScore} 
-              label={`X2 ${t("score_upper", "ĐIỂM")}`}
-              beforeAd={onAdStart}
-              afterAd={onAdEnd}
-            />
-          </div>
+          <RewardAdButton
+            rewardType="x2"
+            onSuccess={handleDoubleScore}
+            label={`X2 ${t("score_upper", "ĐIỂM")}`}
+            beforeAd={onAdStart}
+            afterAd={onAdEnd}
+          />
         )}
-        <div className={doubleClaimed ? "w-full" : "flex-1"}>
-          <HyperModalButton
-            onClick={() => {
-              onPlayAgain();
-            }}
-            variant="secondary"
-          >
-            <div className="flex items-center justify-center gap-2">
-              <RotateCcw size={18} />
-              {t("play_again", "CHƠI LẠI")}
-            </div>
-          </HyperModalButton>
-        </div>
+        <HyperModalButton
+          onClick={() => {
+            onPlayAgain();
+          }}
+          variant="secondary"
+        >
+          <div className="flex items-center justify-center gap-2">
+            <RotateCcw size={18} />
+            {t("play_again", "CHƠI LẠI")}
+          </div>
+        </HyperModalButton>
       </div>
     </HyperModal>
   );

@@ -30,9 +30,24 @@ const BGM_VOLUME = 0.35;
 
 let sfxBank: Partial<Record<Sfx | UiSound, Howl>> = {};
 let bgm: Howl | null = null;
-let musicRequested = false;
-let disposed = false;
-let sfxEnabled = true;
+export interface AudioPolicy {
+  musicEnabled: boolean;
+  sfxEnabled: boolean;
+  parentMuted: boolean;
+  paused: boolean;
+  shouldPlayBgm: boolean;
+}
+
+let policy: AudioPolicy = {
+  musicEnabled: true,
+  sfxEnabled: true,
+  parentMuted: false,
+  paused: false,
+  shouldPlayBgm: true,
+};
+let unlocked = false;
+
+const UI_SOUNDS: ReadonlySet<Sfx | UiSound> = new Set(["click", "close", "toggle"]);
 
 function getSfx(type: Sfx | UiSound): Howl {
   const existing = sfxBank[type];
@@ -55,7 +70,7 @@ function getBgm(): Howl {
     volume: BGM_VOLUME,
     loop: true,
     preload: true,
-    html5: true,
+    html5: false,
   });
   return bgm;
 }
@@ -69,27 +84,23 @@ function resumeAudioContext(): void {
   }
 }
 
-export function playSfx(type: Sfx | UiSound): void {
-  if (disposed || !sfxEnabled) return;
-  resumeAudioContext();
-  const sound = getSfx(type);
-  sound.stop();
-  sound.play();
+function canPlayBgm(): boolean {
+  return unlocked && policy.musicEnabled && !policy.parentMuted && !policy.paused && policy.shouldPlayBgm;
 }
 
-export function setSfxEnabled(enabled: boolean): void {
-  sfxEnabled = enabled;
+function canPlaySfx(type: Sfx | UiSound): boolean {
+  if (!unlocked || !policy.sfxEnabled || policy.parentMuted) return false;
+  // UI interaction sounds (click, close, toggle) are always allowed even while paused
+  if (UI_SOUNDS.has(type)) return true;
+  // Round completion fanfare sounds
+  if (type === "win" || type === "wrong") return true;
+  // Board interactions are only allowed during active play
+  return !policy.paused;
 }
 
-export function toggleBgm(play: boolean): void {
-  musicRequested = play;
-  if (disposed) return;
-
-  if (!play) {
-    bgm?.fade(bgm.volume(), 0, 120);
-    window.setTimeout(() => {
-      if (!musicRequested) bgm?.pause();
-    }, 130);
+function syncBgm(): void {
+  if (!canPlayBgm()) {
+    bgm?.pause();
     return;
   }
 
@@ -98,15 +109,36 @@ export function toggleBgm(play: boolean): void {
   if (!track.playing()) track.play();
 }
 
-/** Prime Howler from a trusted pointer/keyboard gesture when available. */
-export function unlockAudio(): void {
-  if (disposed) return;
-  resumeAudioContext();
-  Howler.autoUnlock = true;
-  if (musicRequested && bgm && !bgm.playing()) {
-    bgm.play();
-  }
+/** Apply the one playback policy shared by BGM and SFX. */
+export function setAudioPolicy(next: Partial<AudioPolicy>): void {
+  policy = { ...policy, ...next };
+  syncBgm();
 }
 
+/** Prime Howler from a trusted pointer/keyboard gesture when available. */
+export function unlockAudio(): void {
+  unlocked = true;
+  resumeAudioContext();
+  Howler.autoUnlock = true;
+  syncBgm();
+}
 
-export function muteAll(): void { Howler.mute(true); } export function unmuteAll(): void { Howler.mute(false); }
+export function playSfx(type: Sfx | UiSound): void {
+  if (!canPlaySfx(type)) return;
+  resumeAudioContext();
+  const sound = getSfx(type);
+  sound.stop();
+  sound.play();
+}
+
+export function getAudioPolicy(): Readonly<AudioPolicy> {
+  return { ...policy };
+}
+
+export function isBgmPlayable(): boolean {
+  return canPlayBgm();
+}
+
+export function isSfxPlayable(type: Sfx | UiSound): boolean {
+  return canPlaySfx(type);
+}

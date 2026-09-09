@@ -23,6 +23,7 @@ interface Props {
   level: number;
   /** Current combo count – used to scale spark/flash effects. */
   combo: number;
+  isPaused: boolean;
 }
 
 interface TileView {
@@ -73,6 +74,7 @@ export const GameBoard = memo(function GameBoard({
   onSelect,
   level,
   combo,
+  isPaused,
 }: Props) {
   const { t } = useTranslation();
   perfDiagnostics.count("react.gameBoardRender");
@@ -83,6 +85,7 @@ export const GameBoard = memo(function GameBoard({
   const layoutRef = useRef({ rows, cols });
   const stateRef = useRef<BoardState>({ tiles, selectedIds, wrongIds, hintIds, activePath, combo });
   const redrawRef = useRef<(() => void) | null>(null);
+  const isPausedRef = useRef(isPaused);
   const [assetStatus, setAssetStatus] = useState<"loading" | "ready" | "error">("loading");
   const [assetError, setAssetError] = useState<string | null>(null);
 
@@ -94,6 +97,7 @@ export const GameBoard = memo(function GameBoard({
   stateRef.current.hintIds = hintIds;
   stateRef.current.activePath = activePath;
   stateRef.current.combo = combo;
+  isPausedRef.current = isPaused;
 
   useEffect(() => {
     const host = hostRef.current;
@@ -482,7 +486,9 @@ export const GameBoard = memo(function GameBoard({
     });
     redrawRef.current = scheduleDraw;
 
-    const renderApp = () => { if (appInitialized && !destroyed) app.render(); };
+    const renderApp = () => {
+      if (appInitialized && !destroyed && !isPausedRef.current) app.render();
+    };
     gsap.ticker.add(renderApp);
 
     // ── destroy ───────────────────────────────────────────────────────────
@@ -586,7 +592,7 @@ export const GameBoard = memo(function GameBoard({
 
   useEffect(() => {
     redrawRef.current?.();
-  }, [tiles, selectedIds, wrongIds, hintIds, activePath, combo, rows, cols]);
+  }, [tiles, selectedIds, wrongIds, hintIds, activePath, combo, rows, cols, isPaused]);
 
   return (
     <div

@@ -8,9 +8,11 @@ import { HyperIcon } from "./hyperUi";
 
 interface ReviveOverlayProps {
   game: UsePairMatchGame;
+  onAdStart?: () => void;
+  onAdEnd?: () => void;
 }
 
-export function ReviveOverlay({ game }: ReviveOverlayProps) {
+export function ReviveOverlay({ game, onAdStart, onAdEnd }: ReviveOverlayProps) {
   const { t } = useTranslation();
   const handleGiveUp = () => {
     game.setLost("no_lives");
@@ -35,6 +37,8 @@ export function ReviveOverlay({ game }: ReviveOverlayProps) {
           rewardType="revive" 
           onSuccess={handleRevive} 
           label={t("revive_upper", "HỒI SINH")}
+          beforeAd={onAdStart}
+          afterAd={onAdEnd}
         />
         <HyperModalButton onClick={handleGiveUp} variant="secondary">
           {t("give_up", "Bỏ cuộc")}

@@ -1,7 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-const LANGUAGE_STORAGE_KEY = 'fruit-slashing-language';
+const LANGUAGE_STORAGE_KEY = 'pikachu-language';
 type SupportedLanguage = 'vi' | 'en';
 const isSupportedLanguage = (value: string | null): value is SupportedLanguage => value === 'vi' || value === 'en';
 const getInitialLanguage = (): SupportedLanguage => {
@@ -43,7 +43,38 @@ const resources = {
       anonymous: "Ẩn danh",
       no_score: "Chưa có điểm nào",
       loading_leaderboard: "Đang tải bảng xếp hạng...",
-      close: "Đóng"
+      close: "Đóng",
+      pause: "Tạm dừng",
+      continue: "Tiếp tục",
+      top_10: "Top 10",
+      you: "Bạn",
+      open_scores: "Mở bảng điểm",
+      open_leaderboard: "Mở bảng xếp hạng",
+      lives_out_of_3: "trên 3 lượt",
+      pause_background: "Game đã tạm dừng khi bạn rời khỏi màn hình.",
+      pause_host: "Game đang tạm dừng bởi hệ thống.",
+      pause_waiting_host: "Đợi hệ thống tiếp tục game để chơi tiếp.",
+      pause_waiting_background: "Quay lại cửa sổ game để tiếp tục.",
+      leaderboard_sample: "Điểm mẫu",
+      hint: "Gợi ý",
+      shuffle: "Đảo",
+      bomb: "Bom",
+      add_item: "THÊM",
+      plus_1_turn: "+1 lượt",
+      plus_1_turn_caps: "+1 LƯỢT",
+      watch_ad: "XEM QUẢNG CÁO",
+      maybe_later: "Để sau",
+      time_up: "HẾT THỜI GIAN!",
+      you_lose: "BẠN ĐÃ THUA!",
+      score_upper: "ĐIỂM",
+      play_again: "CHƠI LẠI",
+      revive_upper: "HỒI SINH",
+      give_up: "Bỏ cuộc",
+      completed: "HOÀN THÀNH!",
+      x2_score_upper: "X2 ĐIỂM",
+      pikachu_board: "Bàn chơi Ghép đôi Pikachu",
+      error_loading_assets: "Không thể tải asset bàn chơi:",
+      loading_characters: "Đang tải..."
     }
   },
   en: {
@@ -74,7 +105,38 @@ const resources = {
       anonymous: "Anonymous",
       no_score: "No score yet",
       loading_leaderboard: "Loading leaderboard...",
-      close: "Close"
+      close: "Close",
+      pause: "Paused",
+      continue: "Continue",
+      top_10: "Top 10",
+      you: "You",
+      open_scores: "Open scores",
+      open_leaderboard: "Open leaderboard",
+      lives_out_of_3: "of 3 lives",
+      pause_background: "The game paused while you were away.",
+      pause_host: "The game is paused by the host.",
+      pause_waiting_host: "Waiting for the host to resume the game.",
+      pause_waiting_background: "Return to the game window to continue.",
+      leaderboard_sample: "Sample scores",
+      hint: "Hint",
+      shuffle: "Shuffle",
+      bomb: "Bomb",
+      add_item: "ADD",
+      plus_1_turn: "+1 turn",
+      plus_1_turn_caps: "+1 TURN",
+      watch_ad: "WATCH AD",
+      maybe_later: "Maybe later",
+      time_up: "TIME'S UP!",
+      you_lose: "YOU LOSE!",
+      score_upper: "SCORE",
+      play_again: "PLAY AGAIN",
+      revive_upper: "REVIVE",
+      give_up: "Give Up",
+      completed: "COMPLETED!",
+      x2_score_upper: "X2 SCORE",
+      pikachu_board: "Pikachu Match Board",
+      error_loading_assets: "Failed to load board assets:",
+      loading_characters: "Loading..."
     }
   }
 };

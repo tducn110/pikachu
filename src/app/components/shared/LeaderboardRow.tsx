@@ -14,11 +14,13 @@ export function LeaderboardRow({
 
   return (
     <li className="leaderboard-row">
-      {medal ? (
-        <img className="leaderboard-rank leaderboard-rank--medal" src={medal} alt={`Hạng ${rank}`} />
-      ) : (
-        <span className="leaderboard-rank-number">{rank}</span>
-      )}
+      <div className="leaderboard-rank-col">
+        {medal ? (
+          <img className="leaderboard-rank leaderboard-rank--medal" src={medal} alt={`Hạng ${rank}`} />
+        ) : (
+          <span className="leaderboard-rank-number">{rank}</span>
+        )}
+      </div>
       <img className="leaderboard-avatar" src={avatar} alt="" aria-hidden="true" />
       <span className="leaderboard-player">{name}</span>
       <strong className="leaderboard-score">{score.toLocaleString("vi-VN")}</strong>

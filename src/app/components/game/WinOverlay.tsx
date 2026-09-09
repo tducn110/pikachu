@@ -49,27 +49,29 @@ export function WinOverlay({
         {displayScore}
       </div>
 
-      <div className="flex flex-col sm:flex-row w-full gap-3 mt-auto">
-
+      <div className="flex flex-col w-full gap-3 mt-auto">
         {!doubleClaimed && (
-          <div className="flex-1">
-            <RewardAdButton 
-              rewardType="x2" 
-              onSuccess={handleDoubleScore} 
-              label={t("x2_score_upper", "X2 ĐIỂM")}
-              beforeAd={onAdStart}
-              afterAd={onAdEnd}
-            />
-          </div>
+          <RewardAdButton
+            rewardType="x2"
+            onSuccess={handleDoubleScore}
+            label={t("x2_score_upper", "X2 ĐIỂM")}
+            beforeAd={onAdStart}
+            afterAd={onAdEnd}
+          />
         )}
-        <div className={doubleClaimed ? "w-full flex flex-col sm:flex-row gap-3" : "flex-1 flex flex-col gap-3"}>
+        <div className="flex w-full gap-2 items-center">
           <HyperModalButton onClick={onNextLevel} variant="secondary" className="flex-1">
             {t("continue", "TIẾP TỤC")}
           </HyperModalButton>
           {!doubleClaimed && (
-             <HyperModalButton onClick={onShowScores} variant="secondary">
-               <HyperIcon name="trophy" className="w-5 h-5 mx-auto opacity-70" />
-             </HyperModalButton>
+            <HyperModalButton
+              onClick={onShowScores}
+              variant="secondary"
+              className="w-14 h-12 shrink-0 px-0 flex items-center justify-center rounded-full"
+              aria-label={t("open_leaderboard", "Mở bảng xếp hạng")}
+            >
+              <HyperIcon name="trophy" className="w-6 h-6 mx-auto opacity-80" />
+            </HyperModalButton>
           )}
         </div>
       </div>
