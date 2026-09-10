@@ -22,8 +22,9 @@
 import {
   complete,
   getCapabilities,
-  getLeaderboard,
+  getLeaderboard, getPersonalBest,
   getState,
+  getWinkBridge,
   onMute,
   onPause,
   onResume,
@@ -32,12 +33,14 @@ import {
   subscribe,
   type CompletionInput,
   type LeaderboardOptions,
-  type LeaderboardResponse,
+  type LeaderboardResponse, type LeaderboardEntry,
   type SubmitScoreInput,
   type SubmitScoreResponse,
   type WinkBridgeCapabilities,
   type WinkBridgeState,
 } from './wink-bridge';
+
+
 
 export interface WinkRound {
   readonly roundId: string;
@@ -78,10 +81,21 @@ export class WinkGameIntegration {
    * score refer to the same round id.
    */
   startRound(): WinkRound {
+    const sdk = getWinkBridge();
+    if (sdk?.gameplayStart) {
+      try { sdk.gameplayStart(); } catch {}
+    }
     return Object.freeze({
       roundId: newRoundId(),
       startedAtMs: Date.now(),
     });
+  }
+
+  track(eventName: string, properties?: Record<string, unknown>): void {
+    const sdk = getWinkBridge();
+    if (sdk?.can && sdk.can('track') && sdk.track) {
+      sdk.track(eventName, properties).catch(() => {});
+    }
   }
 
   /**
@@ -98,6 +112,7 @@ export class WinkGameIntegration {
     if (this.#completedRounds.has(round.roundId)) {
       return false;
     }
+    this.#completedRounds.add(round.roundId);
 
     const { playDurationMs, ...rest } = extra;
     complete({
@@ -108,9 +123,10 @@ export class WinkGameIntegration {
       ),
       ...rest,
     });
-    this.#completedRounds.add(round.roundId);
     return true;
   }
+
+  lastSubmittedEntryId: string | null = null;
 
   /**
    * Submit the final qualifying score. Call this only at the boundary you
@@ -120,12 +136,20 @@ export class WinkGameIntegration {
    * with `CAPABILITY_DENIED` before any network activity. Let that rejection
    * surface in the UI. Do not substitute a local success.
    */
-  submitFinalScore(input: SubmitScoreInput): Promise<SubmitScoreResponse> {
-    return submitScore(input);
+  async submitFinalScore(input: SubmitScoreInput): Promise<SubmitScoreResponse> {
+    const res = await submitScore(input);
+    if (res && res.entry) {
+      this.lastSubmittedEntryId = res.entry.id;
+    }
+    return res;
+  }
+
+  getPersonalBest(): Promise<LeaderboardEntry | null> {
+    return getPersonalBest();
   }
 
   refreshLeaderboard(
-    options?: LeaderboardOptions,
+    options?: LeaderboardOptions
   ): Promise<LeaderboardResponse> {
     return getLeaderboard(options);
   }
@@ -136,6 +160,14 @@ export class WinkGameIntegration {
 
   get state(): WinkBridgeState | null {
     return getState();
+  }
+
+  get displayName(): string | null {
+    const s = this.state;
+    if (s?.phase === 'ready_authenticated' && s.displayName) {
+      return s.displayName;
+    }
+    return null;
   }
 
   /** True when the current identity may persist a score. */
@@ -176,3 +208,7 @@ export class WinkGameIntegration {
 }
 
 export const winkGame = new WinkGameIntegration();
+
+if (typeof window !== 'undefined') {
+  (window as any).winkGame = winkGame;
+}
