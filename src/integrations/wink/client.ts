@@ -72,8 +72,24 @@ function newRoundId(): string {
 
 export class WinkGameIntegration {
   #completedRounds = new Set<string>();
-
   #disposers: Array<() => void> = [];
+  #initialized = false;
+
+  /**
+   * Initialize connection with the Wink SDK host exactly once per game mount.
+   */
+  async init(): Promise<void> {
+    if (this.#initialized) return;
+    this.#initialized = true;
+    const sdk = getWinkBridge();
+    if (sdk?.init) {
+      try {
+        await sdk.init();
+      } catch (err) {
+        console.warn("[Wink] SDK init error:", err);
+      }
+    }
+  }
 
   /**
    * Open a new semantic round. Keep the returned handle for the whole round —

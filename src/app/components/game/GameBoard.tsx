@@ -38,6 +38,7 @@ interface TileView {
   lastWrong: boolean;
   lastHint: boolean;
   lastVisible: boolean;
+  removalAnimation: gsap.core.Timeline | null;
   isSpawned: boolean;
   targetX: number;
   targetY: number;
@@ -54,6 +55,17 @@ interface BoardState {
 
 const toColor = (value: string) => Number.parseInt(value.slice(1), 16);
 const MAX_TILE_VIEWS = 16 * 16;
+
+function getBoardDimensions(tiles: PairTile[], level: number): { rows: number; cols: number } {
+  if (tiles.length === 0) return getBoardSize(level);
+  return tiles.reduce(
+    (dimensions, tile) => ({
+      rows: Math.max(dimensions.rows, tile.row + 1),
+      cols: Math.max(dimensions.cols, tile.col + 1),
+    }),
+    { rows: 0, cols: 0 },
+  );
+}
 
 /**
  * Pixi board renderer. React owns game state and HUD; Pixi owns the 256 tile
@@ -78,14 +90,18 @@ export const GameBoard = memo(function GameBoard({
 }: Props) {
   const { t } = useTranslation();
   perfDiagnostics.count("react.gameBoardRender");
-  // Recalculate layout based on current tiles/level and container size
-  const { rows, cols } = getBoardSize(level);
+  // Gameplay tiles own grid dimensions. Canvas owns only pixel layout.
+  const { rows, cols } = getBoardDimensions(tiles, level);
   const hostRef = useRef<HTMLDivElement>(null);
   const onSelectRef = useRef(onSelect);
   const layoutRef = useRef({ rows, cols });
   const stateRef = useRef<BoardState>({ tiles, selectedIds, wrongIds, hintIds, activePath, combo });
   const redrawRef = useRef<(() => void) | null>(null);
+  const pauseAnimationsRef = useRef<((paused: boolean) => void) | null>(null);
+  const reducedMotionRef = useRef<((reduced: boolean) => void) | null>(null);
   const isPausedRef = useRef(isPaused);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const prefersReducedMotionRef = useRef(reducedMotion);
   const [assetStatus, setAssetStatus] = useState<"loading" | "ready" | "error">("loading");
   const [assetError, setAssetError] = useState<string | null>(null);
 
@@ -98,6 +114,25 @@ export const GameBoard = memo(function GameBoard({
   stateRef.current.activePath = activePath;
   stateRef.current.combo = combo;
   isPausedRef.current = isPaused;
+  prefersReducedMotionRef.current = reducedMotion;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener("change", update);
+    return () => mediaQuery.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    pauseAnimationsRef.current?.(isPaused);
+    redrawRef.current?.();
+  }, [isPaused]);
+
+  useEffect(() => {
+    reducedMotionRef.current?.(reducedMotion);
+    redrawRef.current?.();
+  }, [reducedMotion]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -136,6 +171,47 @@ export const GameBoard = memo(function GameBoard({
     // Reuse a fixed pool. Tile ids are regenerated on reset, so a Map keyed by
     // id would retain old display objects and grow forever during a session.
     const tileViews: TileView[] = [];
+    const tileAnimations = new Set<gsap.core.Animation>();
+
+    const trackAnimation = <T extends gsap.core.Animation>(animation: T): T => {
+      tileAnimations.add(animation);
+      if (isPausedRef.current) animation.pause();
+      return animation;
+    };
+
+    const forgetAnimation = (animation: gsap.core.Animation): void => {
+      tileAnimations.delete(animation);
+    };
+
+    const setAnimationsPaused = (paused: boolean): void => {
+      for (const animation of tileAnimations) animation.paused(paused);
+      bolt?.setPaused(paused);
+      sparks?.setPaused(paused);
+      comboFlash?.setPaused(paused);
+      screenShake?.setPaused(paused);
+    };
+
+    const setAnimationsReducedMotion = (reduced: boolean): void => {
+      bolt?.setReducedMotion(reduced);
+      sparks?.setReducedMotion(reduced);
+      comboFlash?.setReducedMotion(reduced);
+      screenShake?.setReducedMotion(reduced);
+      if (!reduced) return;
+
+      for (const animation of tileAnimations) animation.kill();
+      tileAnimations.clear();
+      for (const view of tileViews) {
+        view.removalAnimation = null;
+        view.root.alpha = 1;
+        view.root.rotation = 0;
+        view.root.scale.set(view.lastSelected ? 1.05 : 1);
+        view.root.position.set(view.targetX, view.targetY);
+        view.root.visible = view.lastVisible;
+      }
+    };
+
+    pauseAnimationsRef.current = setAnimationsPaused;
+    reducedMotionRef.current = setAnimationsReducedMotion;
 
     // track previous path reference to detect new paths
     let lastPath: Point[] | null | undefined;
@@ -223,6 +299,7 @@ export const GameBoard = memo(function GameBoard({
               lastTileSize: -1,
               lastSelected: false, lastWrong: false,
               lastHint: false,    lastVisible: false,
+              removalAnimation: null,
               isSpawned: false,
               targetX: -1, targetY: -1,
             };
@@ -253,7 +330,13 @@ export const GameBoard = memo(function GameBoard({
           const layoutChanged = currentView.lastTileSize !== tileSize;
 
           if (currentView.tileId !== tile.id) {
+            currentView.removalAnimation?.kill();
+            currentView.removalAnimation = null;
             currentView.isSpawned = false;
+            currentView.root.visible = true;
+            currentView.root.alpha = 1;
+            currentView.root.rotation = 0;
+            currentView.root.scale.set(1);
           }
           currentView.tileId = tile.id;
 
@@ -262,34 +345,57 @@ export const GameBoard = memo(function GameBoard({
             const tileWorldX = originX + (tile.col + 0.5) * tileSize;
             const tileWorldY = originY + (tile.row + 0.5) * tileSize;
 
-            // Spark burst at this tile's world position
-            sparks?.burst(tileWorldX, tileWorldY, tileSize, state.combo);
-
-            // Tile pop: punch-up then shrink
-            gsap.timeline({
-              onComplete: () => {
-                currentView.root.visible = false;
-                currentView.root.alpha   = 1;
-                currentView.root.scale.set(1);
-              },
-            })
-              .to(currentView.root.scale, {
-                x: 1.38, y: 1.38,
-                duration: 0.08,
-                ease: "power3.out",
-              })
-              .to(currentView.root, { alpha: 0.95, duration: 0.08 }, "<")
-              .to(currentView.root.scale, {
-                x: 0, y: 0,
-                duration: 0.20,
-                ease: "back.in(2.8)",
-              }, "+=0.03")
-              .to(currentView.root, { alpha: 0, duration: 0.20, ease: "power2.in" }, "<");
+            if (prefersReducedMotionRef.current) {
+              currentView.root.visible = false;
+              currentView.root.alpha = 1;
+              currentView.root.scale.set(1);
+            } else {
+              sparks?.burst(tileWorldX, tileWorldY, tileSize, state.combo);
+              currentView.root.visible = true;
+              currentView.root.alpha = 1;
+              gsap.killTweensOf(currentView.root);
+              gsap.killTweensOf(currentView.root.scale);
+              let removalAnimation: gsap.core.Timeline;
+              removalAnimation = trackAnimation(gsap.timeline({
+                onComplete: () => {
+                  currentView.root.visible = false;
+                  currentView.root.alpha = 1;
+                  currentView.root.scale.set(1);
+                  currentView.removalAnimation = null;
+                  forgetAnimation(removalAnimation);
+                },
+              }));
+              currentView.removalAnimation = removalAnimation;
+              removalAnimation
+                .to(currentView.root.scale, {
+                  x: 1.38, y: 1.38,
+                  duration: 0.08,
+                  ease: "power3.out",
+                })
+                .to(currentView.root, { alpha: 0.95, duration: 0.08 }, "<")
+                .to(currentView.root.scale, {
+                  x: 0, y: 0,
+                  duration: 0.20,
+                  ease: "back.in(2.8)",
+                }, "+=0.03")
+                .to(currentView.root, { alpha: 0, duration: 0.20, ease: "power2.in" }, "<");
+            }
 
           } else if (visible) {
+            currentView.removalAnimation?.kill();
+            currentView.removalAnimation = null;
             currentView.root.visible = true;
-          } else {
+          } else if (!currentView.removalAnimation) {
             currentView.root.visible = false;
+          }
+
+          if (!visible && currentView.removalAnimation) {
+            currentView.root.eventMode = "none";
+            currentView.lastSelected = isSelected;
+            currentView.lastWrong = isWrong;
+            currentView.lastHint = isHint;
+            currentView.lastVisible = false;
+            continue;
           }
 
           // ── position ─────────────────────────────────────────────────
@@ -316,28 +422,41 @@ export const GameBoard = memo(function GameBoard({
             currentView.targetY = targetY;
             const staggerDelay = (currentRows - tile.row) * 0.05 + tile.col * 0.02;
             gsap.killTweensOf(currentView.root.position);
-            gsap.to(currentView.root.position, {
+            let positionTween: gsap.core.Tween;
+            positionTween = trackAnimation(gsap.to(currentView.root.position, {
               x: targetX, y: targetY,
-              duration: 0.45,
-              delay: staggerDelay,
+              duration: prefersReducedMotionRef.current ? 0.01 : 0.45,
+              delay: prefersReducedMotionRef.current ? 0 : staggerDelay,
               ease: "power2.in",
               onComplete: () => {
-                gsap.timeline()
+                forgetAnimation(positionTween);
+                if (prefersReducedMotionRef.current) return;
+                let landingTimeline: gsap.core.Timeline;
+                landingTimeline = trackAnimation(gsap.timeline({
+                  onComplete: () => forgetAnimation(landingTimeline),
+                }));
+                landingTimeline
                   .to(currentView.root.scale, { x: 1.15, y: 0.82, duration: 0.08, ease: "power1.out" })
                   .to(currentView.root.scale, { x: 0.90, y: 1.08, duration: 0.08, ease: "power1.inOut" })
                   .to(currentView.root.scale, { x: 1.00, y: 1.00, duration: 0.10, ease: "sine.out" });
               },
-            });
+            }));
           }
 
           perfDiagnostics.count("pixi.positionUpdates");
 
           // ── wrong shake ───────────────────────────────────────────────
           if (isWrong && !currentView.lastWrong) {
-            gsap.fromTo(currentView.root,
-              { rotation: -0.10 },
-              { rotation: 0.10, duration: 0.05, yoyo: true, repeat: 5,
-                onComplete: () => { currentView.root.rotation = 0; } });
+            if (!prefersReducedMotionRef.current) {
+              let wrongTween: gsap.core.Tween;
+              wrongTween = trackAnimation(gsap.fromTo(currentView.root,
+                { rotation: -0.10 },
+                { rotation: 0.10, duration: 0.05, yoyo: true, repeat: 5,
+                  onComplete: () => {
+                    currentView.root.rotation = 0;
+                    forgetAnimation(wrongTween);
+                  } }));
+            }
           } else if (!isWrong) {
             currentView.root.rotation = 0;
           }
@@ -353,11 +472,14 @@ export const GameBoard = memo(function GameBoard({
           ) {
             if (currentView.lastSelected !== isSelected) {
               gsap.killTweensOf(currentView.root.scale);
-              gsap.to(currentView.root.scale, {
+              let selectionTween: gsap.core.Tween;
+              selectionTween = trackAnimation(gsap.to(currentView.root.scale, {
                 x: isSelected ? 1.05 : 1,
                 y: isSelected ? 1.05 : 1,
-                duration: 0.15, ease: "power2.out",
-              });
+                duration: prefersReducedMotionRef.current ? 0.01 : 0.15,
+                ease: "power2.out",
+                onComplete: () => forgetAnimation(selectionTween),
+              }));
             }
             currentView.card.clear();
             perfDiagnostics.count("pixi.graphicsRedraws");
@@ -452,7 +574,7 @@ export const GameBoard = memo(function GameBoard({
         }
 
         // ── combo flash ────────────────────────────────────────────────
-        if (state.combo > lastCombo && state.combo >= 2 && state.activePath && state.activePath.length >= 2) {
+        if (!prefersReducedMotionRef.current && state.combo > lastCombo && state.combo >= 2 && state.activePath && state.activePath.length >= 2) {
           // find midpoint of the path in world coords
           const midIdx = Math.floor(state.activePath.length / 2);
           const mp     = state.activePath[midIdx];
@@ -502,13 +624,14 @@ export const GameBoard = memo(function GameBoard({
         screenShake?.destroy(); screenShake = null;
         boardFrame = null;
         for (const view of tileViews) {
+          view.removalAnimation?.kill();
           gsap.killTweensOf(view.root);
           gsap.killTweensOf(view.root.position);
           gsap.killTweensOf(view.root.scale);
         }
+        tileAnimations.clear();
         perfDiagnostics.count("pixi.applicationDestroyed");
-        // Character atlases and the panel texture are shared Assets-cache entries.
-        app.destroy({ removeView: true, releaseGlobalResources: false }, { children: true });
+        app.destroy({ removeView: true, releaseGlobalResources: true }, { children: true });
       }
     };
 
@@ -566,6 +689,8 @@ export const GameBoard = memo(function GameBoard({
         sparks     = createMatchSparks(fxLayer);
         comboFlash = createComboFlash(fxLayer, app.screen);
         screenShake = createScreenShake(sceneRoot);
+        setAnimationsReducedMotion(prefersReducedMotionRef.current);
+        setAnimationsPaused(isPausedRef.current);
 
         resizeObserver.observe(host);
         scheduleDraw();
@@ -583,6 +708,8 @@ export const GameBoard = memo(function GameBoard({
     return () => {
       disposed = true;
       redrawRef.current = null;
+      pauseAnimationsRef.current = null;
+      reducedMotionRef.current = null;
       resizeObserver.disconnect();
       if (drawFrame !== 0) cancelAnimationFrame(drawFrame);
       gsap.ticker.remove(renderApp);
@@ -592,7 +719,7 @@ export const GameBoard = memo(function GameBoard({
 
   useEffect(() => {
     redrawRef.current?.();
-  }, [tiles, selectedIds, wrongIds, hintIds, activePath, combo, rows, cols, isPaused]);
+  }, [tiles, selectedIds, wrongIds, hintIds, activePath, combo, rows, cols]);
 
   return (
     <div

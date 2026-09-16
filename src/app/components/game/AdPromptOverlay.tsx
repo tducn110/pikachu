@@ -22,12 +22,12 @@ export function AdPromptOverlay({ itemType, onConfirm, onCancel, onAdStart, onAd
   };
 
   return (
-    <HyperModal>
+    <HyperModal labelledBy="ad-prompt-title" onRequestClose={onCancel}>
       <div className="mb-4">
         <HyperIcon name={itemType} className="w-16 h-16 drop-shadow-md mx-auto" />
       </div>
       
-      <h2 className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-2">
+      <h2 id="ad-prompt-title" className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-2">
         {t("add_item", "THÊM")} {itemNames[itemType]}
       </h2>
       

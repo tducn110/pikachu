@@ -40,12 +40,12 @@ export function LoseOverlay({
   const icon = reason === "timeout" ? "clock" : "heart";
 
   return (
-    <HyperModal>
+    <HyperModal labelledBy="lose-title">
       <div className="mb-2">
         <HyperIcon name={icon} className="w-16 h-16 drop-shadow-md mx-auto" />
       </div>
       
-      <h2 className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-4 shadow-text">
+      <h2 id="lose-title" className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-4 shadow-text">
         {title}
       </h2>
 

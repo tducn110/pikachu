@@ -34,6 +34,8 @@ const FLASH_DURATION   = 0.30;   // seconds for full flash cycle
 export interface ComboFlash {
   fire(midX: number, midY: number, combo: number): void;
   resize(screen: { width: number; height: number }): void;
+  setPaused(paused: boolean): void;
+  setReducedMotion(reduced: boolean): void;
   destroy(): void;
 }
 
@@ -68,6 +70,9 @@ export function createComboFlash(
     container.addChild(g);
     rings.push({ g, inUse: false });
   }
+  const timelines = new Set<gsap.core.Timeline>();
+  let paused = false;
+  let reducedMotion = false;
 
   function acquireRing(): (typeof rings)[0] | null {
     return rings.find(r => !r.inUse) ?? null;
@@ -75,7 +80,7 @@ export function createComboFlash(
 
   // ── fire ─────────────────────────────────────────────────────────────────
   function fire(midX: number, midY: number, combo: number): void {
-    if (combo < 2) return;  // only trigger from combo 2+
+    if (combo < 2 || paused || reducedMotion) return;  // only trigger from combo 2+
 
     const intensity = Math.min(1, (combo - 1) / 6);  // 0→1 as combo 2→8
 
@@ -83,8 +88,13 @@ export function createComboFlash(
     flash.visible = true;
     flash.alpha   = 0;
     gsap.killTweensOf(flash);
-    gsap.timeline({
-      onComplete: () => { flash.visible = false; flash.alpha = 0; },
+    let flashTimeline: gsap.core.Timeline;
+    flashTimeline = gsap.timeline({
+      onComplete: () => {
+        timelines.delete(flashTimeline);
+        flash.visible = false;
+        flash.alpha = 0;
+      },
     })
       .to(flash, {
         alpha: FLASH_MAX_ALPHA * (0.4 + intensity * 0.6),
@@ -96,6 +106,7 @@ export function createComboFlash(
         duration: FLASH_DURATION * 0.75,
         ease: "power1.in",
       });
+    timelines.add(flashTimeline);
 
     // 2. ripple ring(s)  – 1 ring at combo 2-4, 2 rings at combo 5+
     const ringCount = combo >= 5 ? 2 : 1;
@@ -125,7 +136,9 @@ export function createComboFlash(
       const proxy = { radius: r0, alpha: 0.9 };
 
       gsap.killTweensOf(proxy);
-      gsap.timeline({ delay, onComplete: () => {
+      let ringTimeline: gsap.core.Timeline;
+      ringTimeline = gsap.timeline({ delay, onComplete: () => {
+        timelines.delete(ringTimeline);
         safeRing.inUse     = false;
         safeRing.g.visible = false;
         safeRing.g.clear();
@@ -137,6 +150,7 @@ export function createComboFlash(
           ease: "power1.out",
           onUpdate: () => drawRing(proxy.radius, proxy.alpha),
         });
+      timelines.add(ringTimeline);
     }
   }
 
@@ -144,7 +158,29 @@ export function createComboFlash(
     drawFlash(s.width, s.height);
   }
 
+  function setPaused(nextPaused: boolean): void {
+    if (paused === nextPaused) return;
+    paused = nextPaused;
+    for (const timeline of timelines) timeline.paused(paused);
+  }
+
+  function setReducedMotion(nextReducedMotion: boolean): void {
+    reducedMotion = nextReducedMotion;
+    if (!reducedMotion) return;
+    for (const timeline of timelines) timeline.kill();
+    timelines.clear();
+    flash.visible = false;
+    flash.alpha = 0;
+    for (const ring of rings) {
+      ring.inUse = false;
+      ring.g.visible = false;
+      ring.g.clear();
+    }
+  }
+
   function destroy(): void {
+    for (const timeline of timelines) timeline.kill();
+    timelines.clear();
     gsap.killTweensOf(flash);
     for (const r of rings) {
       gsap.killTweensOf(r.g);
@@ -155,5 +191,5 @@ export function createComboFlash(
     container.destroy({ children: false });
   }
 
-  return { fire, resize, destroy };
+  return { fire, resize, setPaused, setReducedMotion, destroy };
 }

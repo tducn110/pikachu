@@ -16,6 +16,8 @@ import { useGameBoard } from "./useGameBoard";
 import { type ScoreStats } from "../utils/stats";
 import { perfDiagnostics } from "../components/game/pixi/pixiPerfDiagnostics";
 
+export type SupportType = "hint" | "shuffle" | "bomb";
+
 export interface UsePairMatchGame {
   tiles: PairTile[];
   selectedIds: string[];
@@ -35,7 +37,9 @@ export interface UsePairMatchGame {
   loseReason: "timeout" | "no_lives" | null;
   stats: ScoreStats;
   lives: number;
-  supportStock: { hint: number; shuffle: number; bomb: number };
+  supportStock: Record<SupportType, number>;
+  supportAdUsed: Record<SupportType, boolean>;
+  isSupportLocked: Record<SupportType, boolean>;
   sfxEnabled: boolean;
   musicEnabled: boolean;
   setSfxEnabled: (v: boolean) => void;
@@ -51,6 +55,17 @@ export interface UsePairMatchGame {
   revive: (hearts: number) => void;
   doubleScore: () => void;
   setLost: (reason: "timeout" | "no_lives") => void;
+}
+
+export function computeSupportLockState(
+  stock: Record<SupportType, number>,
+  adUsed: Record<SupportType, boolean>
+): Record<SupportType, boolean> {
+  return {
+    hint: stock.hint <= 0 && adUsed.hint,
+    shuffle: stock.shuffle <= 0 && adUsed.shuffle,
+    bomb: stock.bomb <= 0 && adUsed.bomb,
+  };
 }
 
 export function usePairMatchGame({
@@ -74,10 +89,18 @@ export function usePairMatchGame({
   });
   const [shuffleNotice, setShuffleNotice] = useState(false);
   const [wrongReason, setWrongReason] = useState<"different-kind" | "blocked-path" | null>(null);
-  const [supportStock, setSupportStock] = useState({ hint: 1, shuffle: 1, bomb: 1 });
+  const [supportStock, setSupportStock] = useState<Record<SupportType, number>>({ hint: 1, shuffle: 1, bomb: 1 });
+  const [supportAdUsed, setSupportAdUsed] = useState<Record<SupportType, boolean>>({
+    hint: false,
+    shuffle: false,
+    bomb: false,
+  });
 
-  const addSupport = useCallback((type: "hint" | "shuffle" | "bomb") => {
+  const isSupportLocked = computeSupportLockState(supportStock, supportAdUsed);
+
+  const addSupport = useCallback((type: SupportType) => {
     setSupportStock((prev) => ({ ...prev, [type]: prev[type] + 1 }));
+    setSupportAdUsed((prev) => ({ ...prev, [type]: true }));
   }, []);
 
   const lockRef = useRef(false);
@@ -251,7 +274,7 @@ export function usePairMatchGame({
   useEffect(() => {
     if (session.status === "playing" && session.timeLeft === 0) {
       session.setLost("timeout");
-      audio.sfx("wrong"); // Maybe add a game-over sound instead if available, 'wrong' works for now
+      audio.sfx("timeout");
     }
   }, [session.timeLeft, session.status, session.setLost, audio.sfx]);
 
@@ -261,6 +284,7 @@ export function usePairMatchGame({
     setWrongReason(null);
     setShuffleNotice(false);
     setSupportStock({ hint: 1, shuffle: 1, bomb: 1 });
+    setSupportAdUsed({ hint: false, shuffle: false, bomb: false });
     board.resetBoard(1);
     session.resetSession(false);
     audio.sfx("reset");
@@ -272,6 +296,7 @@ export function usePairMatchGame({
     setWrongReason(null);
     setShuffleNotice(false);
     setSupportStock({ hint: 1, shuffle: 1, bomb: 1 });
+    setSupportAdUsed({ hint: false, shuffle: false, bomb: false });
     board.resetBoard(session.level + 1);
     session.resetSession(true);
     audio.sfx("reset");
@@ -368,6 +393,8 @@ export function usePairMatchGame({
     loseReason: session.loseReason,
     stats: session.stats,
     supportStock,
+    supportAdUsed,
+    isSupportLocked,
     sfxEnabled: audio.sfxEnabled,
     musicEnabled: audio.musicEnabled,
     setSfxEnabled: audio.setSfxEnabled,

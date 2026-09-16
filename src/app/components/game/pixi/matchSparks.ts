@@ -52,6 +52,8 @@ interface Particle {
 // ─── public API ──────────────────────────────────────────────────────────────
 export interface MatchSparks {
   burst(worldX: number, worldY: number, tileSize: number, combo: number): void;
+  setPaused(paused: boolean): void;
+  setReducedMotion(reduced: boolean): void;
   destroy(): void;
 }
 
@@ -70,6 +72,9 @@ export function createMatchSparks(parent: Container): MatchSparks {
     container.addChild(g);
     pool.push({ g, inUse: false });
   }
+  const timelines = new Set<gsap.core.Timeline>();
+  let paused = false;
+  let reducedMotion = false;
 
   function acquireParticle(): Particle | null {
     return pool.find(p => !p.inUse) ?? null;
@@ -88,6 +93,7 @@ export function createMatchSparks(parent: Container): MatchSparks {
   }
 
   function burst(wx: number, wy: number, tileSize: number, combo: number): void {
+    if (paused || reducedMotion) return;
     const count   = Math.min(BASE_COUNT + Math.floor((combo - 1) * 2), BASE_COUNT + MAX_EXTRA);
     const speedMul = BASE_SPEED + (combo - 1) * 0.12;
     const dist    = tileSize * (0.55 + Math.random() * 0.35) * speedMul;
@@ -120,7 +126,14 @@ export function createMatchSparks(parent: Container): MatchSparks {
       const tx = wx + Math.cos(angle) * d;
       const ty = wy + Math.sin(angle) * d;
 
-      gsap.timeline({ delay })
+      let timeline: gsap.core.Timeline;
+      timeline = gsap.timeline({
+        delay,
+        onComplete: () => {
+          timelines.delete(timeline);
+          releaseParticle(p);
+        },
+      })
         .to(p.g.position, {
           x: tx, y: ty,
           duration: dur,
@@ -135,12 +148,28 @@ export function createMatchSparks(parent: Container): MatchSparks {
           x: 0.3, y: 0.3,
           duration: dur * 0.45,
           ease: "power2.in",
-        }, dur * 0.55)
-        .call(() => releaseParticle(p));
+        }, dur * 0.55);
+      timelines.add(timeline);
     }
   }
 
+  function setPaused(nextPaused: boolean): void {
+    if (paused === nextPaused) return;
+    paused = nextPaused;
+    for (const timeline of timelines) timeline.paused(paused);
+  }
+
+  function setReducedMotion(nextReducedMotion: boolean): void {
+    reducedMotion = nextReducedMotion;
+    if (!reducedMotion) return;
+    for (const timeline of timelines) timeline.kill();
+    timelines.clear();
+    for (const particle of pool) releaseParticle(particle);
+  }
+
   function destroy(): void {
+    for (const timeline of timelines) timeline.kill();
+    timelines.clear();
     for (const p of pool) {
       gsap.killTweensOf(p.g);
       gsap.killTweensOf(p.g.position);
@@ -150,5 +179,5 @@ export function createMatchSparks(parent: Container): MatchSparks {
     container.destroy({ children: false });
   }
 
-  return { burst, destroy };
+  return { burst, setPaused, setReducedMotion, destroy };
 }

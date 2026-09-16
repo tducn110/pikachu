@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { playSfx } from "../../utils/audio";
 import { requestInterstitialAd } from "../../utils/ads";
@@ -15,6 +15,7 @@ import { ReviveOverlay } from "./ReviveOverlay";
 import { AdPromptOverlay } from "./AdPromptOverlay";
 import { HyperIcon, HyperTitleBar, type HyperIconName } from "./hyperUi";
 import { Pause } from "lucide-react";
+import { winkGame, type WinkRound } from "../../../integrations/wink/client";
 
 export function Game() {
   const { t } = useTranslation();
@@ -23,6 +24,15 @@ export function Game() {
   const [adPromptItem, setAdPromptItem] = useState<"hint" | "shuffle" | "bomb" | null>(null);
   const [isAdPlaying, setIsAdPlaying] = useState(false);
   const lifecycle = useGameLifecycle();
+  const roundRef = useRef<WinkRound | null>(null);
+  const roundEndedRef = useRef(false);
+
+  const handleRoundStart = useCallback(() => {
+    if (!roundRef.current) {
+      roundRef.current = winkGame.startRound();
+      roundEndedRef.current = false;
+    }
+  }, []);
 
   // One pause value reaches gameplay, Pixi rendering, and audio policy.
   const showPause = manualPause || lifecycle.pauseReason !== null;
@@ -32,7 +42,20 @@ export function Game() {
     isPaused,
     isAdPlaying,
     parentMuted: lifecycle.parentMuted,
+    onRoundStart: handleRoundStart,
   });
+  const hasModal = showPause || showDashboard || adPromptItem !== null || game.status !== "playing";
+
+  // Exactly-once semantic round completion & score submission
+  useEffect(() => {
+    if ((game.status === "won" || game.status === "lost") && roundRef.current && !roundEndedRef.current) {
+      roundEndedRef.current = true;
+      winkGame.completeRound(roundRef.current);
+      if (winkGame.canSubmitScore && game.score > 0) {
+        void winkGame.submitFinalScore({ score: game.score }).catch(() => {});
+      }
+    }
+  }, [game.status, game.score]);
 
   const handleAdStart = useCallback(() => {
     setIsAdPlaying(true);
@@ -43,6 +66,8 @@ export function Game() {
   }, []);
 
   const handleRestart = () => {
+    roundRef.current = null;
+    roundEndedRef.current = false;
     handleAdStart();
     void requestInterstitialAd({
       type: "start",
@@ -55,6 +80,8 @@ export function Game() {
 
   // Interstitial between levels — transition always continues regardless of ad outcome
   const handleNextLevel = () => {
+    roundRef.current = null;
+    roundEndedRef.current = false;
     handleAdStart();
     void requestInterstitialAd({
       type: "next",
@@ -77,6 +104,11 @@ export function Game() {
 
   const handleSupportRequest = (type: "hint" | "shuffle" | "bomb", action: () => void) => {
     if (game.supportStock[type] <= 0) {
+      if (game.supportAdUsed[type]) {
+        // Already claimed 1 ad for this power-up: permanently locked for this session
+        playSfx("wrong");
+        return;
+      }
       // ponytail: click feedback on prompt open when stock depleted
       playSfx("click");
       setAdPromptItem(type);
@@ -93,6 +125,7 @@ export function Game() {
     <main
       className="hyper-game-root relative h-[100dvh] overflow-hidden bg-cover bg-center bg-fixed font-sans"
       style={{ backgroundImage: "url('/background.webp')" }}
+      aria-hidden={hasModal || undefined}
     >
       <div className="hyper-game-atmosphere pointer-events-none absolute inset-0" />
 
@@ -145,9 +178,9 @@ export function Game() {
 
                     <div className="hyper-sidebar-support">
                       <div className="hyper-support-list">
-                        <SupportButton iconName="hint" label={t("hint", "Gợi ý")} stock={game.supportStock.hint} onClick={doHint} />
-                        <SupportButton iconName="shuffle" label={t("shuffle", "Đảo")} stock={game.supportStock.shuffle} onClick={doShuffle} />
-                        <SupportButton iconName="bomb" label={t("bomb", "Bom")} stock={game.supportStock.bomb} onClick={doBomb} />
+                        <SupportButton iconName="hint" label={t("hint", "Gợi ý")} stock={game.supportStock.hint} locked={game.isSupportLocked.hint} onClick={doHint} />
+                        <SupportButton iconName="shuffle" label={t("shuffle", "Đảo")} stock={game.supportStock.shuffle} locked={game.isSupportLocked.shuffle} onClick={doShuffle} />
+                        <SupportButton iconName="bomb" label={t("bomb", "Bom")} stock={game.supportStock.bomb} locked={game.isSupportLocked.bomb} onClick={doBomb} />
                       </div>
                     </div>
 
@@ -194,9 +227,9 @@ export function Game() {
           {/* Mobile Power-up Footer */}
           <div className="mobile-power-up-footer lg:hidden mt-2 flex justify-center items-center shrink-0">
             <div className="hyper-panel flex items-center justify-center gap-6 px-6 py-3 rounded-[2rem] border-2 border-[#d2aa6f] shadow-xl">
-              <SupportButton compact iconName="hint" label={t("hint", "Gợi ý")} stock={game.supportStock.hint} onClick={doHint} />
-              <SupportButton compact iconName="shuffle" label={t("shuffle", "Đảo")} stock={game.supportStock.shuffle} onClick={doShuffle} />
-              <SupportButton compact iconName="bomb" label={t("bomb", "Bom")} stock={game.supportStock.bomb} onClick={doBomb} />
+              <SupportButton compact iconName="hint" label={t("hint", "Gợi ý")} stock={game.supportStock.hint} locked={game.isSupportLocked.hint} onClick={doHint} />
+              <SupportButton compact iconName="shuffle" label={t("shuffle", "Đảo")} stock={game.supportStock.shuffle} locked={game.isSupportLocked.shuffle} onClick={doShuffle} />
+              <SupportButton compact iconName="bomb" label={t("bomb", "Bom")} stock={game.supportStock.bomb} locked={game.isSupportLocked.bomb} onClick={doBomb} />
             </div>
           </div>
         </section>
@@ -247,7 +280,7 @@ export function Game() {
           onAdEnd={handleAdEnd}
         />
       )}
-      {adPromptItem && (
+      {adPromptItem && !game.supportAdUsed[adPromptItem] && (
         <AdPromptOverlay
           itemType={adPromptItem}
           onConfirm={() => {
@@ -308,7 +341,10 @@ function MobileGameHeader({
     <header className="game-mobile-header flex flex-col shrink-0 gap-2 pb-2 lg:hidden px-2 pt-2">
       {/* Timer and primary controls stay in the top row on phones. */}
       <div className="flex items-center gap-2">
-        <div className="game-mobile-progress hyper-panel flex min-w-0 flex-1 items-center gap-1.5 rounded-xl px-3 py-2">
+        <div
+          className="game-mobile-progress hyper-panel flex min-w-0 flex-1 items-center gap-1.5 rounded-xl px-3 py-2"
+          aria-label={`${t("time", "Thời gian")} ${timeLeft}s`}
+        >
           <HyperIcon name="clock" className="h-5 w-5 shrink-0 object-contain" />
           <div className="game-mobile-progress-track min-w-0 flex-1" aria-hidden="true">
             <div className="game-mobile-progress-fill" style={{ width: `${timeProgress}%` }} />
@@ -338,7 +374,11 @@ function MobileGameHeader({
 
       {/* Second Row: Hearts + Score (Centered & Enlarged) */}
       <div className="game-mobile-stats flex w-full items-center justify-center">
-        <div className="game-mobile-stats-panel hyper-panel flex items-center justify-center gap-3 rounded-2xl px-5 py-1.5 border border-[#d2aa6f]">
+        <div
+          className="game-mobile-stats-panel hyper-panel flex items-center justify-center gap-3 rounded-2xl px-5 py-1.5 border border-[#d2aa6f]"
+          role="group"
+          aria-label={`${t("score", "Điểm")} ${score.toLocaleString("vi-VN")}; ${lives} ${t("lives_out_of_3", "trên 3 lượt")}`}
+        >
           {/* Hearts */}
           <div className="flex gap-1">
             {[1, 2, 3].map(i => (
@@ -361,6 +401,7 @@ function SupportButton({
   iconName,
   label,
   stock = 0,
+  locked = false,
   onClick,
   compact = false,
   mini = false,
@@ -368,21 +409,27 @@ function SupportButton({
   iconName: HyperIconName;
   label: string;
   stock?: number;
+  locked?: boolean;
   onClick: () => void;
   compact?: boolean;
   mini?: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={label}
-      className={`hyper-support-button ${mini ? "hyper-support-button--mini" : compact ? "hyper-support-button--compact" : ""}`}
+      disabled={locked}
+      aria-label={`${label}${locked ? ` (${t("locked", "Đã khóa")})` : ""}`}
+      className={`hyper-support-button ${mini ? "hyper-support-button--mini" : compact ? "hyper-support-button--compact" : ""} ${locked ? "hyper-support-button--locked" : ""}`}
     >
       <HyperIcon name={iconName} className="hyper-support-icon" />
       {!compact && !mini && <span className="hyper-support-label">{label}</span>}
-      <span className={`hyper-support-counter ${stock > 0 ? 'hyper-support-counter--has-stock' : ''}`} aria-hidden="true">
-        x{stock}
+      <span
+        className={`hyper-support-counter ${stock > 0 ? 'hyper-support-counter--has-stock' : ''} ${locked ? 'hyper-support-counter--locked' : stock <= 0 ? 'hyper-support-counter--ad' : ''}`}
+        aria-hidden="true"
+      >
+        {locked ? "🔒" : stock <= 0 ? "+Ad" : `x${stock}`}
       </span>
     </button>
   );

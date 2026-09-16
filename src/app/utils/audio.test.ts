@@ -51,8 +51,15 @@ describe("audio policy", () => {
     expect(isSfxPlayable("reset")).toBe(false);
   });
 
-  it("allows round completion fanfare sounds (win, wrong) when triggered", () => {
+  it("allows round completion fanfare sounds when triggered", () => {
     expect(isSfxPlayable("win")).toBe(true);
     expect(isSfxPlayable("wrong")).toBe(true);
+    expect(isSfxPlayable("timeout")).toBe(true);
+  });
+
+  it("handles preloadEssentialAudio and preloadNonCriticalAudio gracefully without errors", async () => {
+    const { preloadEssentialAudio, preloadNonCriticalAudio } = await import("./audio");
+    await expect(preloadEssentialAudio()).resolves.toBeUndefined();
+    await expect(preloadNonCriticalAudio()).resolves.toBeUndefined();
   });
 });

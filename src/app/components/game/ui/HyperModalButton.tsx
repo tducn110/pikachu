@@ -7,23 +7,26 @@ interface HyperModalButtonProps {
   variant?: "primary" | "secondary";
   className?: string;
   disabled?: boolean;
+  sound?: boolean;
+  ariaLabel?: string;
 }
 
-export function HyperModalButton({ children, onClick, variant = "primary", className = "", disabled = false }: HyperModalButtonProps) {
+export function HyperModalButton({ children, onClick, variant = "primary", className = "", disabled = false, sound = true, ariaLabel }: HyperModalButtonProps) {
   const baseClass = "hyper-modal-btn";
   const variantClass = variant === "primary" ? "hyper-modal-btn-primary" : "hyper-modal-btn-secondary";
   
   const handleClick = () => {
-    // ponytail: central click sfx for all modal buttons
-    playSfx("click");
+    if (sound) playSfx("click");
     onClick?.();
   };
 
   return (
-    <button 
+    <button
+      type="button"
       className={`${baseClass} ${variantClass} ${className}`}
       onClick={handleClick}
       disabled={disabled}
+      aria-label={ariaLabel}
     >
       {children}
     </button>

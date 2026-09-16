@@ -160,6 +160,8 @@ function lerpPolyline(
 export interface LightningBolt {
   play(path: Point[], originX: number, originY: number, tileSize: number): void;
   hide(): void;
+  setPaused(paused: boolean): void;
+  setReducedMotion(reduced: boolean): void;
   destroy(): void;
 }
 
@@ -191,6 +193,8 @@ export function createLightningBolt(parent: Container): LightningBolt {
   let travelProxy = { t: 0 };
   let travelTween: gsap.core.Tween | null = null;
   let mainTL: gsap.core.Timeline | null = null;
+  let paused = false;
+  let reducedMotion = false;
 
   // ── drawing helpers ─────────────────────────────────────────────────────
   function rerollZigzag(): void {
@@ -224,6 +228,7 @@ export function createLightningBolt(parent: Container): LightningBolt {
 
   function startFlicker(): void {
     stopFlicker();
+    if (paused || reducedMotion || !container.visible) return;
     flickerInt = setInterval(() => {
       rerollZigzag();
       renderLines();
@@ -253,6 +258,7 @@ export function createLightningBolt(parent: Container): LightningBolt {
   // ── public ───────────────────────────────────────────────────────────────
   function play(path: Point[], ox: number, oy: number, ts: number): void {
     hide();                    // clean up any previous run
+    if (paused || reducedMotion) return;
 
     waypoints  = toWorld(path, ox, oy, ts);
     currentTS  = ts;
@@ -294,11 +300,25 @@ export function createLightningBolt(parent: Container): LightningBolt {
     waypoints = [];
   }
 
+  function setPaused(nextPaused: boolean): void {
+    if (paused === nextPaused) return;
+    paused = nextPaused;
+    mainTL?.paused(paused);
+    travelTween?.paused(paused);
+    if (paused) stopFlicker();
+    else if (container.visible && mainTL) startFlicker();
+  }
+
+  function setReducedMotion(nextReducedMotion: boolean): void {
+    reducedMotion = nextReducedMotion;
+    if (reducedMotion) hide();
+  }
+
   function destroy(): void {
     hide();
     parent.removeChild(container);
     container.destroy({ children: true });
   }
 
-  return { play, hide, destroy };
+  return { play, hide, setPaused, setReducedMotion, destroy };
 }

@@ -36,12 +36,12 @@ export function WinOverlay({
   };
 
   return (
-    <HyperModal>
+    <HyperModal labelledBy="win-title">
       <div className="mb-2 text-6xl text-[var(--hyper-orange)] drop-shadow-md">
         ✦
       </div>
       
-      <h2 className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-4 shadow-text">
+      <h2 id="win-title" className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-4 shadow-text">
         {t("completed", "HOÀN THÀNH!")}
       </h2>
       
@@ -68,7 +68,7 @@ export function WinOverlay({
               onClick={onShowScores}
               variant="secondary"
               className="w-14 h-12 shrink-0 px-0 flex items-center justify-center rounded-full"
-              aria-label={t("open_leaderboard", "Mở bảng xếp hạng")}
+              ariaLabel={t("open_leaderboard", "Mở bảng xếp hạng")}
             >
               <HyperIcon name="trophy" className="w-6 h-6 mx-auto opacity-80" />
             </HyperModalButton>

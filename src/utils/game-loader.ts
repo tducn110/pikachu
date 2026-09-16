@@ -1,5 +1,10 @@
+import { preloadEssentialAudio, preloadNonCriticalAudio } from "../app/utils/audio";
+
 // Preload strictly CRITICAL resources required for the initial game view.
-// ponytail: standard font and essential asset barrier without bloated queues
+// Architecture referenced from 02_2048:
+// Phase 1: Fonts & typography
+// Phase 2: Core gameplay SFX (tap, match, wrong)
+// Non-critical: BGM and victory sounds loaded during idle time after splash dismissal
 
 let criticalPreloadPromise: Promise<void> | null = null;
 
@@ -23,10 +28,12 @@ export function preloadCriticalResources(onProgress?: (pct: number) => void): Pr
   if (criticalPreloadPromise) return criticalPreloadPromise;
 
   criticalPreloadPromise = (async () => {
-    onProgress?.(30);
+    onProgress?.(25);
+    // Phase 1: Custom typography
     await preloadFonts().catch(() => {});
-    onProgress?.(70);
-    await new Promise((r) => setTimeout(r, 60));
+    onProgress?.(65);
+    // Phase 2: Core gameplay SFX (tap, click, match, wrong)
+    await preloadEssentialAudio().catch(() => {});
     onProgress?.(95);
   })()
     .then(() => undefined)
@@ -39,5 +46,15 @@ export function preloadCriticalResources(onProgress?: (pct: number) => void): Pr
 }
 
 export function preloadNonCriticalResources(): void {
-  // Deferred non-critical tasks
+  if (typeof window === "undefined") return;
+
+  const loadBackgroundAudio = () => {
+    void preloadNonCriticalAudio().catch(() => {});
+  };
+
+  if (typeof window.requestIdleCallback === "function") {
+    window.requestIdleCallback(loadBackgroundAudio, { timeout: 4000 });
+  } else {
+    setTimeout(loadBackgroundAudio, 1200);
+  }
 }

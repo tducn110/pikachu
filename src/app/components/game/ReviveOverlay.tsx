@@ -23,12 +23,12 @@ export function ReviveOverlay({ game, onAdStart, onAdEnd }: ReviveOverlayProps) 
   };
 
   return (
-    <HyperModal>
+    <HyperModal labelledBy="revive-title">
       <div className="mb-2">
         <HyperIcon name="heart" className="w-16 h-16 drop-shadow-md mx-auto grayscale opacity-80" />
       </div>
       
-      <h2 className="text-2xl font-black text-[var(--hyper-purple-ink)] uppercase mb-6">
+      <h2 id="revive-title" className="text-2xl font-black text-[var(--hyper-purple-ink)] uppercase mb-6">
         {t("you_lose", "BẠN ĐÃ THUA!")}
       </h2>
 

@@ -35,7 +35,7 @@ export function PauseOverlay({
   };
 
   return (
-    <HyperModal labelledBy="pause-title">
+    <HyperModal labelledBy="pause-title" onRequestClose={canContinue ? onClose : undefined}>
       <h2 id="pause-title" className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-3 mt-2 shadow-text">
         {t("pause", "TẠM DỪNG")}
       </h2>
@@ -49,7 +49,8 @@ export function PauseOverlay({
 
       <div className="w-full mb-4">
           <HyperModalButton
-          onClick={() => { playSfx("click"); onClose(); }} 
+          onClick={() => { playSfx("click"); onClose(); }}
+          sound={false}
           variant="primary"
           className="py-4"
           disabled={!canContinue}
@@ -69,7 +70,8 @@ export function PauseOverlay({
       )}
 
       <div className="flex w-full justify-center sm:justify-between gap-3 sm:gap-4 mt-2 px-0 sm:px-2">
-        <button 
+        <button
+          type="button"
           className={`flex flex-col items-center gap-1 transition-transform active:scale-95 ${!sfxEnabled ? 'opacity-50 grayscale' : 'opacity-90 hover:opacity-100'}`}
           onClick={() => {
             const next = !sfxEnabled;
@@ -81,6 +83,8 @@ export function PauseOverlay({
               playSfx("toggle");
             }
           }}
+          aria-pressed={sfxEnabled}
+          aria-label={`${t("sfx", "Âm thanh")}: ${sfxEnabled ? t("on", "Bật") : t("off", "Tắt")}`}
         >
           <div className="w-14 h-14 rounded-full bg-[var(--hyper-gold)] flex items-center justify-center shadow-lg border-2 border-[var(--hyper-brown)]">
             {sfxEnabled ? (
@@ -92,9 +96,12 @@ export function PauseOverlay({
           <span className="text-[var(--hyper-purple-ink)] font-bold text-sm">{t("sfx", "Âm thanh")}</span>
         </button>
 
-        <button 
+        <button
+          type="button"
           className={`flex flex-col items-center gap-1 transition-transform active:scale-95 ${!musicEnabled ? 'opacity-50 grayscale' : 'opacity-90 hover:opacity-100'}`}
           onClick={() => { playSfx("toggle"); setMusicEnabled(!musicEnabled); }}
+          aria-pressed={musicEnabled}
+          aria-label={`${t("music", "Nhạc nền")}: ${musicEnabled ? t("on", "Bật") : t("off", "Tắt")}`}
         >
           <div className="w-14 h-14 rounded-full bg-[var(--hyper-gold)] flex items-center justify-center shadow-lg border-2 border-[var(--hyper-brown)]">
             <Music size={26} strokeWidth={3} className="text-[var(--hyper-brown)]" />

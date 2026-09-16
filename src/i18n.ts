@@ -6,7 +6,19 @@ type SupportedLanguage = 'vi' | 'en';
 const isSupportedLanguage = (value: string | null): value is SupportedLanguage => value === 'vi' || value === 'en';
 const getInitialLanguage = (): SupportedLanguage => {
   if (typeof window === 'undefined') return 'en';
-  try { const value = window.localStorage.getItem(LANGUAGE_STORAGE_KEY); return isSupportedLanguage(value) ? value : 'en'; } catch { return 'en'; }
+  try {
+    const value = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (isSupportedLanguage(value)) return value;
+  } catch {
+    // Storage read failure fallback
+  }
+  // Contract: Wink-hosted initial language = Wink.locale if supported, otherwise English.
+  const winkLocale = (window as any).Wink?.locale;
+  if (typeof winkLocale === 'string') {
+    const normalized = winkLocale.split('-')[0];
+    if (isSupportedLanguage(normalized)) return normalized;
+  }
+  return 'en';
 };
 const persistLanguage = (language: string): void => {
   const normalized = language.split('-')[0];
@@ -74,7 +86,8 @@ const resources = {
       x2_score_upper: "X2 ĐIỂM",
       pikachu_board: "Bàn chơi Ghép đôi Pikachu",
       error_loading_assets: "Không thể tải asset bàn chơi:",
-      loading_characters: "Đang tải..."
+      loading_characters: "Đang tải...",
+      locked: "Đã khóa"
     }
   },
   en: {
@@ -136,7 +149,8 @@ const resources = {
       x2_score_upper: "X2 SCORE",
       pikachu_board: "Pikachu Match Board",
       error_loading_assets: "Failed to load board assets:",
-      loading_characters: "Loading..."
+      loading_characters: "Loading...",
+      locked: "Locked"
     }
   }
 };
@@ -153,5 +167,18 @@ i18n
     }
   });
 i18n.on('languageChanged', persistLanguage);
+
+if (typeof window !== 'undefined' && (window as any).Wink?.on) {
+  try {
+    (window as any).Wink.on('locale', (locale: string) => {
+      const normalized = locale?.split('-')[0];
+      if (isSupportedLanguage(normalized)) {
+        void i18n.changeLanguage(normalized);
+      }
+    });
+  } catch {
+    // Non-fatal listener registration
+  }
+}
 
 export default i18n;
