@@ -4,20 +4,19 @@ import { type UsePairMatchGame } from "../../hooks/usePairMatchGame";
 import { HyperModal } from "./overlays/HyperModal";
 import { RewardAdButton } from "./ui/RewardAdButton";
 import { HyperModalButton } from "./ui/HyperModalButton";
-import { HyperIcon } from "./hyperUi";
 import { RotateCcw } from "lucide-react";
 
 export function WinOverlay({
   score,
   onNextLevel,
-  onShowScores,
+  onRestart,
   game,
   onAdStart,
   onAdEnd,
 }: {
   score: number;
   onNextLevel: () => void;
-  onShowScores: () => void;
+  onRestart: () => void;
   game: UsePairMatchGame;
   onAdStart?: () => void;
   onAdEnd?: () => void;
@@ -63,17 +62,13 @@ export function WinOverlay({
           <HyperModalButton onClick={onNextLevel} variant="secondary" className="win-overlay-continue">
             {t("continue", "TIẾP TỤC")}
           </HyperModalButton>
-          {!doubleClaimed && (
-            <HyperModalButton
-              onClick={onShowScores}
-              variant="secondary"
-              className="win-overlay-leaderboard"
-              ariaLabel={t("open_leaderboard", "Mở bảng xếp hạng")}
-            >
-              <HyperIcon name="trophy" className="w-6 h-6 mx-auto opacity-80" />
-            </HyperModalButton>
-          )}
         </div>
+        <HyperModalButton onClick={onRestart} variant="secondary">
+          <span className="flex items-center justify-center gap-2">
+            <RotateCcw size={18} />
+            {t("play_again", "CHƠI LẠI")}
+          </span>
+        </HyperModalButton>
       </div>
     </HyperModal>
   );

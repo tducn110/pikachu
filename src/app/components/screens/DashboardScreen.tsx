@@ -19,7 +19,7 @@ export function DashboardScreen({
   stats: ScoreStats;
   onClose: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const wink = useWinkIntegration();
   const [loading, setLoading] = useState(true);
 
@@ -49,6 +49,7 @@ export function DashboardScreen({
   const displayScore = wink.personalBest?.score ?? Math.max(stats.best, score);
   const displayRank = wink.personalBest?.rank ? `#${wink.personalBest.rank}` : "—";
   const entries = wink.leaderboard || [];
+  const numberLocale = i18n.resolvedLanguage === "vi" ? "vi-VN" : "en-US";
 
   return (
     <HyperModal className="hyper-dashboard-modal" labelledBy="dashboard-title" onRequestClose={handleClose}>
@@ -84,7 +85,7 @@ export function DashboardScreen({
           </div>
         ) : entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center text-[var(--game-ink-muted)]">
-            <p className="text-sm font-medium">{t("no_scores_yet", "Chưa có điểm số nào trên bảng xếp hạng.")}</p>
+            <p className="text-sm font-medium">{t("no_scores_yet")}</p>
           </div>
         ) : (
           <ol className="leaderboard-list">
@@ -92,7 +93,7 @@ export function DashboardScreen({
               <LeaderboardRow
                 key={entry.id || `${entry.rank}-${index}`}
                 rank={entry.rank ?? index + 1}
-                name={entry.displayName || t("anonymous_player", "Người chơi")}
+                name={entry.displayName || t("anonymous_player")}
                 score={entry.score}
               />
             ))}
@@ -110,7 +111,7 @@ export function DashboardScreen({
             aria-hidden="true"
           />
           <span className="leaderboard-player-you">{playerName}</span>
-          <strong className="leaderboard-player-score">{displayScore.toLocaleString("vi-VN")}</strong>
+          <strong className="leaderboard-player-score">{displayScore.toLocaleString(numberLocale)}</strong>
         </div>
 
         <div className="leaderboard-footer">

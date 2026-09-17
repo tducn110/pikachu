@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_LANGUAGE, resolveInitialLanguage } from "./i18n";
+import i18n, { DEFAULT_LANGUAGE, resolveInitialLanguage } from "./i18n";
 
 describe("language initialization", () => {
   it("uses English by default", () => {
@@ -11,5 +11,11 @@ describe("language initialization", () => {
   it("restores a supported player language choice", () => {
     expect(resolveInitialLanguage("vi")).toBe("vi");
     expect(resolveInitialLanguage("en")).toBe("en");
+  });
+
+  it("has English leaderboard empty and anonymous-player copy", async () => {
+    await i18n.changeLanguage("en");
+    expect(i18n.t("no_scores_yet")).toBe("There are no scores on the leaderboard yet.");
+    expect(i18n.t("anonymous_player")).toBe("Player");
   });
 });

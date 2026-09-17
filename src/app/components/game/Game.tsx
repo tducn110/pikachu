@@ -16,6 +16,7 @@ import { AdPromptOverlay } from "./AdPromptOverlay";
 import { HyperIcon, HyperTitleBar, type HyperIconName } from "./hyperUi";
 import { Pause } from "lucide-react";
 import { useWinkIntegration } from "../../../integrations/wink/useWinkIntegration";
+import { isPlayableSession } from "../../utils/gameSessionState";
 
 export function Game() {
   const { t } = useTranslation();
@@ -35,17 +36,25 @@ export function Game() {
     }
   }, []);
 
-  // One pause value reaches gameplay, Pixi rendering, and audio policy.
-  const showPause = manualPause || lifecycle.pauseReason !== null;
-  const isPaused = showPause || showDashboard || adPromptItem !== null || lifecycle.hostPaused || lifecycle.backgroundPaused;
-
+  // This value reaches the running game before its status is available.
+  const requestedPause = manualPause || lifecycle.pauseReason !== null;
   const game = usePairMatchGame({
-    isPaused,
+    isPaused: requestedPause || showDashboard || adPromptItem !== null || lifecycle.hostPaused || lifecycle.backgroundPaused,
     isAdPlaying,
     parentMuted: lifecycle.parentMuted,
     onRoundStart: handleRoundStart,
   });
+  const sessionIsPlayable = isPlayableSession(game.status);
+  // A completed, lost, or revive state owns its overlay. Pause never stacks on it.
+  const showPause = sessionIsPlayable && requestedPause;
+  const isPaused = !sessionIsPlayable || requestedPause || showDashboard || adPromptItem !== null || lifecycle.hostPaused || lifecycle.backgroundPaused;
   const hasModal = showPause || showDashboard || adPromptItem !== null || game.status !== "playing";
+
+  useEffect(() => {
+    if (sessionIsPlayable) return;
+    setManualPause(false);
+    setShowDashboard(false);
+  }, [sessionIsPlayable]);
 
   // Exactly-once semantic round completion & score submission
   useEffect(() => {
@@ -103,6 +112,12 @@ export function Game() {
     game.resumeAudioFromUserGesture();
   };
 
+  const handlePauseRequest = () => {
+    if (!sessionIsPlayable) return;
+    playSfx("click");
+    setManualPause(true);
+  };
+
   const handleSupportRequest = (type: "hint" | "shuffle" | "bomb", action: () => void) => {
     if (game.supportStock[type] <= 0) {
       if (game.supportAdUsed[type]) {
@@ -139,7 +154,8 @@ export function Game() {
               score={game.score}
               lives={game.lives}
               onDashboard={() => setShowDashboard(true)}
-              onSettings={() => setManualPause(true)}
+              onSettings={handlePauseRequest}
+              pauseEnabled={sessionIsPlayable}
             />
 
             <div className="hyper-game-layout flex min-h-0 min-w-0 flex-1 flex-col lg:grid">
@@ -196,9 +212,10 @@ export function Game() {
                       </button>
                       <button
                           type="button"
-                        onClick={() => { playSfx("click"); setManualPause(true); }}
+                        onClick={handlePauseRequest}
                         className="hyper-action-orb flex items-center justify-center"
                         aria-label={t("pause", "Tạm dừng")}
+                        disabled={!sessionIsPlayable}
                       >
                         <Pause size={24} strokeWidth={3} />
                       </button>
@@ -258,7 +275,7 @@ export function Game() {
         <WinOverlay
           score={game.score}
           onNextLevel={handleNextLevel}
-          onShowScores={() => setShowDashboard(true)}
+          onRestart={handleRestart}
           game={game}
           onAdStart={handleAdStart}
           onAdEnd={handleAdEnd}
@@ -328,6 +345,7 @@ function MobileGameHeader({
   lives,
   onDashboard,
   onSettings,
+  pauseEnabled,
 }: {
   timeLeft: number;
   maxTime: number;
@@ -335,6 +353,7 @@ function MobileGameHeader({
   lives: number;
   onDashboard: () => void;
   onSettings: () => void;
+  pauseEnabled: boolean;
 }) {
   const { t } = useTranslation();
   const timeProgress = Math.max(0, Math.min(100, (timeLeft / Math.max(1, maxTime)) * 100));
@@ -367,6 +386,7 @@ function MobileGameHeader({
             onClick={() => { playSfx("click"); onSettings(); }}
             aria-label={t("pause", "Tạm dừng")}
             className="hyper-action-orb-mobile flex items-center justify-center shrink-0"
+            disabled={!pauseEnabled}
           >
             <Pause size={24} strokeWidth={3} />
           </button>

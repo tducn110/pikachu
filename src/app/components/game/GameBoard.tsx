@@ -88,7 +88,7 @@ export const GameBoard = memo(function GameBoard({
   combo,
   isPaused,
 }: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   perfDiagnostics.count("react.gameBoardRender");
   // Gameplay tiles own grid dimensions. Canvas owns only pixel layout.
   const { rows, cols } = getBoardDimensions(tiles, level);
@@ -123,6 +123,12 @@ export const GameBoard = memo(function GameBoard({
     mediaQuery.addEventListener("change", update);
     return () => mediaQuery.removeEventListener("change", update);
   }, []);
+
+  useEffect(() => {
+    hostRef.current
+      ?.querySelector("canvas")
+      ?.setAttribute("aria-label", t("pikachu_board", "Pikachu Match Board"));
+  }, [i18n.resolvedLanguage, t]);
 
   useEffect(() => {
     pauseAnimationsRef.current?.(isPaused);
