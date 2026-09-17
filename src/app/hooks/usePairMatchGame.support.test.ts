@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { computeSupportLockState, type SupportType } from "./usePairMatchGame";
+import {
+  computeSupportLockState,
+  getSelectedIdsAfterTileTap,
+  type SupportType,
+} from "./usePairMatchGame";
 
 describe("computeSupportLockState - Power-up Ad Limit (1 ad max, then locked)", () => {
   it("starts with all power-ups unlocked when stock > 0 and ad not used", () => {
@@ -58,5 +62,15 @@ describe("computeSupportLockState - Power-up Ad Limit (1 ad max, then locked)", 
     expect(lockState.hint).toBe(true); // Locked because stock = 0 and ad already used
     expect(lockState.shuffle).toBe(false); // Not locked because ad can still be watched
     expect(lockState.bomb).toBe(false); // Has stock
+  });
+});
+
+describe("getSelectedIdsAfterTileTap", () => {
+  it("clears the selection when the player taps the selected tile again", () => {
+    expect(getSelectedIdsAfterTileTap(["tile-a"], "tile-a")).toEqual([]);
+  });
+
+  it("adds a different tile so the normal pair-evaluation flow can continue", () => {
+    expect(getSelectedIdsAfterTileTap(["tile-a"], "tile-b")).toEqual(["tile-a", "tile-b"]);
   });
 });

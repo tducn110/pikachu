@@ -59,15 +59,15 @@ export function WinOverlay({
             afterAd={onAdEnd}
           />
         )}
-        <div className="flex w-full gap-2 items-center">
-          <HyperModalButton onClick={onNextLevel} variant="secondary" className="flex-1">
+        <div className="win-overlay-actions">
+          <HyperModalButton onClick={onNextLevel} variant="secondary" className="win-overlay-continue">
             {t("continue", "TIẾP TỤC")}
           </HyperModalButton>
           {!doubleClaimed && (
             <HyperModalButton
               onClick={onShowScores}
               variant="secondary"
-              className="w-14 h-12 shrink-0 px-0 flex items-center justify-center rounded-full"
+              className="win-overlay-leaderboard"
               ariaLabel={t("open_leaderboard", "Mở bảng xếp hạng")}
             >
               <HyperIcon name="trophy" className="w-6 h-6 mx-auto opacity-80" />

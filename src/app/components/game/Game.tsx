@@ -15,7 +15,7 @@ import { ReviveOverlay } from "./ReviveOverlay";
 import { AdPromptOverlay } from "./AdPromptOverlay";
 import { HyperIcon, HyperTitleBar, type HyperIconName } from "./hyperUi";
 import { Pause } from "lucide-react";
-import { winkGame, type WinkRound } from "../../../integrations/wink/client";
+import { useWinkIntegration } from "../../../integrations/wink/useWinkIntegration";
 
 export function Game() {
   const { t } = useTranslation();
@@ -24,13 +24,14 @@ export function Game() {
   const [adPromptItem, setAdPromptItem] = useState<"hint" | "shuffle" | "bomb" | null>(null);
   const [isAdPlaying, setIsAdPlaying] = useState(false);
   const lifecycle = useGameLifecycle();
-  const roundRef = useRef<WinkRound | null>(null);
+  const wink = useWinkIntegration();
+  const roundActiveRef = useRef(false);
   const roundEndedRef = useRef(false);
 
   const handleRoundStart = useCallback(() => {
-    if (!roundRef.current) {
-      roundRef.current = winkGame.startRound();
-      roundEndedRef.current = false;
+    if (!roundActiveRef.current) {
+      roundActiveRef.current = true;
+      wink.gameplayStart();
     }
   }, []);
 
@@ -48,11 +49,11 @@ export function Game() {
 
   // Exactly-once semantic round completion & score submission
   useEffect(() => {
-    if ((game.status === "won" || game.status === "lost") && roundRef.current && !roundEndedRef.current) {
+    if ((game.status === "won" || game.status === "lost") && roundActiveRef.current && !roundEndedRef.current) {
       roundEndedRef.current = true;
-      winkGame.completeRound(roundRef.current);
-      if (winkGame.canSubmitScore && game.score > 0) {
-        void winkGame.submitFinalScore({ score: game.score }).catch(() => {});
+      wink.gameplayStop();
+      if (wink.canSubmitScore && game.score > 0) {
+        void wink.submitFinalScore({ score: game.score }).catch(() => {});
       }
     }
   }, [game.status, game.score]);
@@ -66,7 +67,7 @@ export function Game() {
   }, []);
 
   const handleRestart = () => {
-    roundRef.current = null;
+    roundActiveRef.current = false;
     roundEndedRef.current = false;
     handleAdStart();
     void requestInterstitialAd({
@@ -80,7 +81,7 @@ export function Game() {
 
   // Interstitial between levels — transition always continues regardless of ad outcome
   const handleNextLevel = () => {
-    roundRef.current = null;
+    roundActiveRef.current = false;
     roundEndedRef.current = false;
     handleAdStart();
     void requestInterstitialAd({

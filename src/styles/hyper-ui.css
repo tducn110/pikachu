@@ -1285,6 +1285,32 @@
   font-size: 1rem;
 }
 
+/* Completion footer: one flexible label action and one fixed-size icon action. */
+.win-overlay-actions {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.win-overlay-actions .hyper-modal-btn {
+  width: auto;
+}
+
+.win-overlay-continue {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.win-overlay-leaderboard {
+  flex: 0 0 3.5rem;
+  width: 3.5rem !important;
+  height: 3rem;
+  padding: 0;
+  border-radius: 999px;
+}
+
 .hyper-fade-in {
   animation: hyperFadeIn 0.2s ease-out forwards;
 }

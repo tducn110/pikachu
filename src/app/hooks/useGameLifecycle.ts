@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { winkGame } from "../../integrations/wink/client";
+import { useWinkIntegration } from "../../integrations/wink/useWinkIntegration";
 
 export type PauseReason = "background" | "host";
 
-const getInitialHostPaused = () => winkGame.state?.lifecycle.paused === true;
-const getInitialParentMuted = () => winkGame.state?.lifecycle.muted === true;
 const getInitialBackgroundPaused = () =>
   typeof document !== "undefined" && document.hidden;
 
@@ -14,24 +12,19 @@ const getInitialBackgroundPaused = () =>
  * continues, so audio is never restarted outside a trusted gesture.
  */
 export function useGameLifecycle() {
-  const [hostPaused, setHostPaused] = useState(getInitialHostPaused);
-  const [parentMuted, setParentMuted] = useState(getInitialParentMuted);
+  const wink = useWinkIntegration();
   const [backgroundPaused, setBackgroundPaused] = useState(getInitialBackgroundPaused);
   const [pauseReason, setPauseReason] = useState<PauseReason | null>(() =>
-    getInitialHostPaused() ? "host" : getInitialBackgroundPaused() ? "background" : null,
+    wink.hostPaused ? "host" : getInitialBackgroundPaused() ? "background" : null,
   );
 
   useEffect(() => {
-    const stopLifecycle = winkGame.bindLifecycle({
-      onPause: () => {
-        setHostPaused(true);
-        setPauseReason("host");
-      },
-      onResume: () => setHostPaused(false),
-      onMute: () => setParentMuted(true),
-      onUnmute: () => setParentMuted(false),
-    });
+    if (wink.hostPaused && pauseReason !== "host") {
+      setPauseReason("host");
+    }
+  }, [wink.hostPaused]);
 
+  useEffect(() => {
     const pauseForBackground = () => {
       setBackgroundPaused(true);
       setPauseReason("background");
@@ -48,14 +41,13 @@ export function useGameLifecycle() {
     window.addEventListener("blur", pauseForBackground);
     window.addEventListener("focus", handleFocus);
     return () => {
-      stopLifecycle();
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("blur", pauseForBackground);
       window.removeEventListener("focus", handleFocus);
     };
   }, []);
 
-  const canContinue = !hostPaused && !backgroundPaused;
+  const canContinue = !wink.hostPaused && !backgroundPaused;
   const acknowledgePause = useCallback(() => {
     if (!canContinue) return false;
     setPauseReason(null);
@@ -63,8 +55,8 @@ export function useGameLifecycle() {
   }, [canContinue]);
 
   return {
-    hostPaused,
-    parentMuted,
+    hostPaused: wink.hostPaused,
+    parentMuted: wink.hostMuted,
     backgroundPaused,
     pauseReason,
     canContinue,

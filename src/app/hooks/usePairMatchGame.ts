@@ -68,6 +68,14 @@ export function computeSupportLockState(
   };
 }
 
+/** A second tap on the current selection is an explicit cancellation. */
+export function getSelectedIdsAfterTileTap(
+  selectedIds: readonly string[],
+  tileId: string,
+): string[] {
+  return selectedIds.includes(tileId) ? [] : [...selectedIds, tileId];
+}
+
 export function usePairMatchGame({
   isPaused = false,
   isAdPlaying = false,
@@ -186,13 +194,19 @@ export function usePairMatchGame({
       if (lockRef.current || session.status !== "playing" || isPaused) return;
       const tile = board.tiles.find((t) => t.id === tileId);
       if (!tile || tile.removed) return;
-      if (board.selectedIds.includes(tileId)) return;
+
+      const next = getSelectedIdsAfterTileTap(board.selectedIds, tileId);
+      if (next.length === 0) {
+        board.setHintIds([]);
+        board.setSelectedIds([]);
+        audio.sfx("tap");
+        return;
+      }
 
       onRoundStart?.();
       board.setHintIds([]);
       audio.sfx("tap");
 
-      const next = [...board.selectedIds, tileId];
       board.setSelectedIds(next);
 
       if (next.length < 2) return;

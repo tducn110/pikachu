@@ -8,8 +8,7 @@ import { LeaderboardRow } from "../shared/LeaderboardRow";
 import { HyperModal } from "../game/overlays/HyperModal";
 import { HyperModalButton } from "../game/ui/HyperModalButton";
 import { HyperIcon } from "../game/hyperUi";
-import { winkGame } from "../../../integrations/wink/client";
-import type { LeaderboardEntry } from "../../../integrations/wink/wink-bridge";
+import { useWinkIntegration } from "../../../integrations/wink/useWinkIntegration";
 
 export function DashboardScreen({
   score,
@@ -21,41 +20,35 @@ export function DashboardScreen({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+  const wink = useWinkIntegration();
   const [loading, setLoading] = useState(true);
-  const [personalBest, setPersonalBest] = useState<LeaderboardEntry | null>(null);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
 
     Promise.allSettled([
-      winkGame.refreshLeaderboard({ limit: 10 }),
-      winkGame.getPersonalBest(),
-    ]).then(([lbRes, pbRes]) => {
+      wink.refreshLeaderboard(),
+      wink.refreshPersonalBest(),
+    ]).then(() => {
       if (!active) return;
-      if (lbRes.status === "fulfilled" && lbRes.value?.entries) {
-        setEntries(lbRes.value.entries);
-      }
-      if (pbRes.status === "fulfilled" && pbRes.value) {
-        setPersonalBest(pbRes.value);
-      }
       setLoading(false);
     });
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [wink.refreshLeaderboard, wink.refreshPersonalBest]);
 
   const handleClose = () => {
     playSfx("close");
     onClose();
   };
 
-  const playerName = winkGame.displayName || t("you", "Bạn");
-  const displayScore = personalBest?.score ?? Math.max(stats.best, score);
-  const displayRank = personalBest?.rank ? `#${personalBest.rank}` : "—";
+  const playerName = wink.displayName || t("you", "Bạn");
+  const displayScore = wink.personalBest?.score ?? Math.max(stats.best, score);
+  const displayRank = wink.personalBest?.rank ? `#${wink.personalBest.rank}` : "—";
+  const entries = wink.leaderboard || [];
 
   return (
     <HyperModal className="hyper-dashboard-modal" labelledBy="dashboard-title" onRequestClose={handleClose}>

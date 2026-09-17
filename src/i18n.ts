@@ -3,22 +3,18 @@ import { initReactI18next } from 'react-i18next';
 
 const LANGUAGE_STORAGE_KEY = 'pikachu-language';
 type SupportedLanguage = 'vi' | 'en';
+export const DEFAULT_LANGUAGE: SupportedLanguage = 'en';
 const isSupportedLanguage = (value: string | null): value is SupportedLanguage => value === 'vi' || value === 'en';
+export const resolveInitialLanguage = (storedLanguage: string | null): SupportedLanguage =>
+  isSupportedLanguage(storedLanguage) ? storedLanguage : DEFAULT_LANGUAGE;
+
 const getInitialLanguage = (): SupportedLanguage => {
-  if (typeof window === 'undefined') return 'en';
+  if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
   try {
-    const value = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (isSupportedLanguage(value)) return value;
+    return resolveInitialLanguage(window.localStorage.getItem(LANGUAGE_STORAGE_KEY));
   } catch {
-    // Storage read failure fallback
+    return DEFAULT_LANGUAGE;
   }
-  // Contract: Wink-hosted initial language = Wink.locale if supported, otherwise English.
-  const winkLocale = (window as any).Wink?.locale;
-  if (typeof winkLocale === 'string') {
-    const normalized = winkLocale.split('-')[0];
-    if (isSupportedLanguage(normalized)) return normalized;
-  }
-  return 'en';
 };
 const persistLanguage = (language: string): void => {
   const normalized = language.split('-')[0];
@@ -168,17 +164,5 @@ i18n
   });
 i18n.on('languageChanged', persistLanguage);
 
-if (typeof window !== 'undefined' && (window as any).Wink?.on) {
-  try {
-    (window as any).Wink.on('locale', (locale: string) => {
-      const normalized = locale?.split('-')[0];
-      if (isSupportedLanguage(normalized)) {
-        void i18n.changeLanguage(normalized);
-      }
-    });
-  } catch {
-    // Non-fatal listener registration
-  }
-}
 
 export default i18n;
