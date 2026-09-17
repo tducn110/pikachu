@@ -22,9 +22,16 @@ const persistLanguage = (language: string): void => {
   try { window.localStorage.setItem(LANGUAGE_STORAGE_KEY, normalized); } catch { /* Optional persistence. */ }
 };
 
+const syncDocumentLang = (language: string): void => {
+  if (typeof document === 'undefined') return;
+  const normalized = language.split('-')[0];
+  document.documentElement.lang = isSupportedLanguage(normalized) ? normalized : 'en';
+};
+
 const resources = {
   vi: {
     translation: {
+      loading_upper: "ĐANG TẢI...",
       game_name: "Pikachu",
       play: "Chơi",
       settings: "Cài đặt",
@@ -91,6 +98,7 @@ const resources = {
   },
   en: {
     translation: {
+      loading_upper: "LOADING...",
       game_name: "Pikachu",
       play: "Play",
       settings: "Settings",
@@ -157,18 +165,23 @@ const resources = {
   }
 };
 
+const initialLanguage = getInitialLanguage();
+syncDocumentLang(initialLanguage);
+
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: getInitialLanguage(),
+    lng: initialLanguage,
     supportedLngs: ['vi', 'en'],
     fallbackLng: "en",
     interpolation: {
       escapeValue: false
     }
   });
-i18n.on('languageChanged', persistLanguage);
-
+i18n.on('languageChanged', (lang) => {
+  persistLanguage(lang);
+  syncDocumentLang(lang);
+});
 
 export default i18n;
