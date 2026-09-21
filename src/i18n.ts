@@ -22,6 +22,11 @@ const persistLanguage = (language: string): void => {
   try { window.localStorage.setItem(LANGUAGE_STORAGE_KEY, normalized); } catch { /* Optional persistence. */ }
 };
 
+export const formatNumber = (value: number, lang?: string): string => {
+  const current = lang || i18n.resolvedLanguage || i18n.language || 'en';
+  return value.toLocaleString(current.startsWith('vi') ? 'vi-VN' : 'en-US');
+};
+
 const syncDocumentLang = (language: string): void => {
   if (typeof document === 'undefined') return;
   const normalized = language.split('-')[0];
@@ -173,7 +178,7 @@ i18n
   .init({
     resources,
     lng: initialLanguage,
-    supportedLngs: ['vi', 'en'],
+    supportedLngs: ['en', 'vi'],
     fallbackLng: "en",
     interpolation: {
       escapeValue: false
