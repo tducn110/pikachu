@@ -21,17 +21,37 @@ export const BOARD_SIZES_MOBILE = [
   { cols: 7, rows: 10 }, // 70
   { cols: 8, rows: 10 }, // 80
 ] as const;
+export const MAX_BOARD_LEVEL_MOBILE = BOARD_SIZES_MOBILE.length * 2;
 
 export function getIsMobile(): boolean {
   return typeof window !== "undefined" && window.innerWidth < 1024;
 }
 
+export function getBoardDimensions(tiles: PairTile[], fallbackLevel: number = 1): { rows: number; cols: number } {
+  if (!tiles || tiles.length === 0) return getBoardSize(fallbackLevel);
+  return tiles.reduce(
+    (dimensions, tile) => ({
+      rows: Math.max(dimensions.rows, tile.row + 1),
+      cols: Math.max(dimensions.cols, tile.col + 1),
+    }),
+    { rows: 0, cols: 0 },
+  );
+}
+
 export function getBoardSize(level: number, isMobile = getIsMobile()) {
   if (isMobile) {
     // 2 levels per size
-    const sizeIndex = Math.max(0, Math.floor((level - 1) / 2));
+    const sizeIndex = Math.max(0, Math.floor((Math.max(1, level) - 1) / 2));
     const maxIndex = BOARD_SIZES_MOBILE.length - 1;
-    return BOARD_SIZES_MOBILE[Math.min(sizeIndex, maxIndex)];
+    const base = BOARD_SIZES_MOBILE[Math.min(sizeIndex, maxIndex)];
+    if (typeof window !== "undefined" && window.innerWidth > window.innerHeight) {
+      // In landscape, orient cols >= rows so tiles have room horizontally
+      return {
+        cols: Math.max(base.cols, base.rows),
+        rows: Math.min(base.cols, base.rows),
+      };
+    }
+    return { cols: base.cols, rows: base.rows };
   } else {
     const size = BOARD_SIZES_DESKTOP[Math.min(Math.max(level, 1), MAX_BOARD_LEVEL) - 1];
     return { rows: size, cols: size };

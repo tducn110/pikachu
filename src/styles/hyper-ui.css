@@ -564,7 +564,8 @@
  * 74vh. This keeps the 8/10-row boards inside the canvas on short phones. */
 @media (max-width: 1023px) {
   .hyper-game-stage {
-    gap: 0.5rem;
+    gap: 0.25rem;
+    padding: 0.25rem;
   }
 
   .hyper-main-frame {
@@ -572,6 +573,8 @@
     min-height: 0;
     flex: 1 1 auto;
     margin-block: 0;
+    border-width: 10px 8px;
+    border-image-width: 10px 8px;
   }
 
   .hyper-board-stage,
@@ -582,16 +585,16 @@
   .hyper-action-orb-mobile {
     position: relative;
     display: grid;
-    width: 44px;
-    min-width: 44px;
-    max-width: 44px;
-    height: 44px;
-    min-height: 44px;
-    max-height: 44px;
-    flex: 0 0 44px;
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    height: 36px;
+    min-height: 36px;
+    max-height: 36px;
+    flex: 0 0 36px;
     place-items: center;
     padding: 0;
-    border: 3px solid #ffbd19;
+    border: 2px solid #ffbd19;
     border-radius: 50%;
     color: #fff;
     background: radial-gradient(circle at 36% 28%, #8f43d4, #57209b 64%, #3c116f);
@@ -600,20 +603,22 @@
       0 0 0 2px #44108e,
       inset 0 2px 3px rgba(255, 255, 255, 0.42),
       inset 0 -2px 3px rgba(48, 10, 90, 0.25),
-      0 4px 6px rgba(65, 20, 110, 0.28);
+      0 3px 5px rgba(65, 20, 110, 0.28);
     cursor: pointer;
   }
 
   .hyper-action-orb-mobile .hyper-action-orb-icon {
-    width: 25px;
-    height: 25px;
+    width: 20px;
+    height: 20px;
     object-fit: contain;
     filter: drop-shadow(0 1px 1px rgba(48, 12, 84, 0.62));
   }
 
   .game-mobile-progress {
     width: 100%;
-    min-height: 52px;
+    min-height: 38px;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
     align-self: stretch;
     border-color: rgba(189, 104, 16, 0.42);
   }
@@ -630,8 +635,8 @@
   }
 
   .game-mobile-progress-track {
-    height: 1rem;
-    min-height: 1rem;
+    height: 0.75rem;
+    min-height: 0.75rem;
     overflow: hidden;
     border: 2px solid rgba(189, 104, 16, 0.42);
     border-radius: 999px;
@@ -645,6 +650,18 @@
     border-radius: inherit;
     background: linear-gradient(90deg, #5bea2d 0%, #21e8dc 55%, #ffbe2e 100%);
     transition: width 260ms linear;
+  }
+
+  .mobile-power-up-footer .hyper-support-button--compact {
+    min-height: 46px;
+    width: 46px;
+    border-radius: 23px;
+  }
+
+  .mobile-power-up-footer .hyper-support-button--compact .hyper-support-icon {
+    width: 1.8rem;
+    height: 1.8rem;
+    flex-basis: 1.8rem;
   }
 }
 
@@ -1182,18 +1199,19 @@
 
 @media (max-width: 1023px) and (orientation: landscape) and (max-height: 600px) {
   .hyper-game-stage {
-    gap: 0.2rem;
-    padding: 0.2rem 0.5rem;
+    gap: 0.15rem;
+    padding: 0.15rem 0.5rem;
   }
 
   .hyper-main-frame {
-    border-top-width: 10px;
-    border-bottom-width: 10px;
+    border-width: 6px 6px;
+    border-image-width: 6px 6px;
   }
 
   .game-mobile-header {
     flex-direction: row;
     align-items: center;
+    justify-content: space-between;
     gap: 0.4rem;
     padding-top: 0;
     padding-bottom: 0.1rem;
@@ -1204,35 +1222,64 @@
     min-width: 0;
   }
 
-  .game-mobile-stats,
+  .game-mobile-stats {
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  .game-mobile-stats-panel {
+    padding: 0.15rem 0.6rem;
+    gap: 0.4rem;
+  }
+
   .mobile-power-up-footer {
-    display: none;
+    display: flex;
+    margin-top: 0.15rem;
+  }
+
+  .mobile-power-up-footer > .hyper-panel {
+    gap: 0.75rem;
+    padding: 0.2rem 0.85rem;
+    border-radius: 1.2rem;
+  }
+
+  .mobile-power-up-footer .hyper-support-button--compact {
+    min-height: 36px;
+    width: 36px;
+    border-radius: 18px;
+    border-width: 2px;
+  }
+
+  .mobile-power-up-footer .hyper-support-button--compact .hyper-support-icon {
+    width: 1.35rem;
+    height: 1.35rem;
+    flex-basis: 1.35rem;
   }
 
   .game-mobile-progress {
-    min-height: 40px;
-    padding-top: 0.35rem;
-    padding-bottom: 0.35rem;
+    min-height: 32px;
+    padding-top: 0.2rem;
+    padding-bottom: 0.2rem;
   }
 
   .game-mobile-progress-track {
-    height: 0.7rem;
-    min-height: 0.7rem;
+    height: 0.55rem;
+    min-height: 0.55rem;
   }
 
   .hyper-action-orb-mobile {
-    width: 36px;
-    min-width: 36px;
-    max-width: 36px;
-    height: 36px;
-    min-height: 36px;
-    max-height: 36px;
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
+    height: 30px;
+    min-height: 30px;
+    max-height: 30px;
     border-width: 2px;
   }
 
   .hyper-action-orb-mobile .hyper-action-orb-icon {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
   }
 
   .hyper-modal-v2 {

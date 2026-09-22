@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   evaluatePairMatch,
   findAvailableMatch,
-  getBoardSize,
   getRemainingPairs,
   hasAnyMatch,
   isBoardCleared,
@@ -214,7 +213,7 @@ export function usePairMatchGame({
       const [firstId, secondId] = next;
       const a = board.tiles.find((t) => t.id === firstId)!;
       const b = board.tiles.find((t) => t.id === secondId)!;
-            const { rows, cols } = getBoardSize(session.level);
+      const { rows, cols } = board;
       const result = perfDiagnostics.measure("pikachu.path.find", () =>
         evaluatePairMatch(board.tiles, a, b, rows, cols),
       );
@@ -252,7 +251,7 @@ export function usePairMatchGame({
         }, 700);
       }
     },
-    [board.tiles, board.selectedIds, board.setActivePath, board.setHintIds, board.setSelectedIds, board.setWrongIds, board.removePair, session.status, session.level, session.combo, session.addMove, session.addScore, session.addTime, session.increaseCombo, session.resetCombo, session.removeLife, audio.sfx, isPaused, scheduleForCurrentRun, onRoundStart]
+    [board, session.status, session.level, session.combo, session.addMove, session.addScore, session.addTime, session.increaseCombo, session.resetCombo, session.removeLife, audio.sfx, isPaused, scheduleForCurrentRun, onRoundStart]
   );
 
   // Detect win or reshuffle
@@ -264,7 +263,7 @@ export function usePairMatchGame({
         audio.sfx("win");
         session.setWon();
       } else {
-                const { rows, cols } = getBoardSize(session.level);
+        const { rows, cols } = board;
         const boardChanged = board.shuffleIfNoMatch(rows, cols);
         if (boardChanged) {
           setShuffleNotice(true);
@@ -273,7 +272,7 @@ export function usePairMatchGame({
         }
       }
     }
-  }, [board.tiles, session.status, session.setWon, board.shuffleIfNoMatch, audio.sfx, scheduleForCurrentRun]);
+  }, [board.tiles, board.rows, board.cols, session.status, session.setWon, board.shuffleIfNoMatch, audio.sfx, scheduleForCurrentRun]);
 
   // Timer loop
   useEffect(() => {
@@ -321,7 +320,7 @@ export function usePairMatchGame({
     perfDiagnostics.count("pikachu.hint.calls");
     onRoundStart?.();
     const scanStartedAt = perfDiagnostics.start("pikachu.hint.scan");
-        const { rows, cols } = getBoardSize(session.level);
+    const { rows, cols } = board;
     const match = findAvailableMatch(board.tiles, rows, cols);
     if (match) {
       board.setHintIds([match.first.id, match.second.id]);
@@ -333,13 +332,13 @@ export function usePairMatchGame({
       return;
     }
     perfDiagnostics.end("pikachu.hint.scan", scanStartedAt);
-  }, [board.tiles, board.setHintIds, session.status, session.level, session.addScore, audio.sfx, isPaused, scheduleForCurrentRun, onRoundStart]);
+  }, [board, session.status, session.addScore, audio.sfx, isPaused, scheduleForCurrentRun, onRoundStart]);
 
   const shuffleBoard = useCallback(() => {
     if (session.status !== "playing" || lockRef.current || isPaused) return;
     perfDiagnostics.count("pikachu.shuffle.calls");
     onRoundStart?.();
-        const { rows, cols } = getBoardSize(session.level);
+    const { rows, cols } = board;
     lockRef.current = true;
     board.setSelectedIds([]);
     board.setWrongIds([]);
@@ -360,12 +359,12 @@ export function usePairMatchGame({
     session.addMove();
     audio.sfx("reset");
     lockRef.current = false;
-  }, [board.setSelectedIds, board.setWrongIds, board.setHintIds, board.setActivePath, board.setTiles, session.status, session.level, session.addMove, audio.sfx, isPaused, onRoundStart]);
+  }, [board, session.status, session.addMove, audio.sfx, isPaused, onRoundStart]);
 
   const bombPair = useCallback(() => {
     if (session.status !== "playing" || lockRef.current || isPaused) return;
     onRoundStart?.();
-        const { rows, cols } = getBoardSize(session.level);
+    const { rows, cols } = board;
     const match = findAvailableMatch(board.tiles, rows, cols);
     if (!match) return;
 
@@ -385,7 +384,7 @@ export function usePairMatchGame({
       board.setActivePath(null);
       lockRef.current = false;
     }, 400);
-  }, [board.tiles, board.setSelectedIds, board.setWrongIds, board.setHintIds, board.setActivePath, board.removePair, session.status, session.level, session.addMove, session.addScore, audio.sfx, isPaused, scheduleForCurrentRun, onRoundStart]);
+  }, [board, session.status, session.level, session.addMove, session.addScore, audio.sfx, isPaused, scheduleForCurrentRun, onRoundStart]);
 
   return {
     tiles: board.tiles,

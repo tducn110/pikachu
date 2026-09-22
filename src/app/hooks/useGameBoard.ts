@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import {
   createPairBoard,
+  getBoardDimensions,
   getBoardSize,
   removeMatchedPair,
   getRemainingPairs,
@@ -31,7 +32,7 @@ export function resolveCharacterIds(
 
 export function useGameBoard(initialLevel: number = 1, characterIds: readonly string[] = []) {
   const [tiles, setTiles] = useState<PairTile[]>(() => {
-        const { rows, cols } = getBoardSize(initialLevel);
+    const { rows, cols } = getBoardSize(initialLevel);
     return createPairBoard(resolveCharacterIds(undefined, characterIds), rows, cols);
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -39,37 +40,41 @@ export function useGameBoard(initialLevel: number = 1, characterIds: readonly st
   const [hintIds, setHintIds] = useState<string[]>([]);
   const [activePath, setActivePath] = useState<Point[] | null>(null);
 
+  const { rows, cols } = getBoardDimensions(tiles, initialLevel);
+
   const resetBoard = useCallback((level: number, ids?: readonly string[]) => {
-        const { rows, cols } = getBoardSize(level);
-    setTiles(createPairBoard(resolveCharacterIds(ids, characterIds), rows, cols));
+    const { rows: r, cols: c } = getBoardSize(level);
+    setTiles(createPairBoard(resolveCharacterIds(ids, characterIds), r, c));
     setSelectedIds([]);
     setWrongIds([]);
     setHintIds([]);
     setActivePath(null);
   }, [characterIds]);
 
-  const removePair = useCallback((firstId: string, secondId: string, level: number, rows: number, cols: number) => {
+  const removePair = useCallback((firstId: string, secondId: string, level: number, rowsArg?: number, colsArg?: number) => {
     setTiles((prev) => {
       const removed = removeMatchedPair(prev, firstId, secondId);
-      return applyGravity(removed, level, rows, cols);
+      const dims = rowsArg && colsArg ? { rows: rowsArg, cols: colsArg } : getBoardDimensions(prev, level);
+      return applyGravity(removed, level, dims.rows, dims.cols);
     });
   }, []);
 
-  const shuffleIfNoMatch = useCallback((rows: number, cols: number) => {
+  const shuffleIfNoMatch = useCallback((rowsArg?: number, colsArg?: number) => {
     perfDiagnostics.count("pikachu.autoShuffleChecks");
-    if (isBoardCleared(tiles) || hasAnyMatch(tiles, rows, cols)) {
+    const dims = rowsArg && colsArg ? { rows: rowsArg, cols: colsArg } : getBoardDimensions(tiles);
+    if (isBoardCleared(tiles) || hasAnyMatch(tiles, dims.rows, dims.cols)) {
       return false;
     }
 
     setTiles((prev) => {
       return perfDiagnostics.measure("pikachu.autoShuffleCheck", () => {
-        if (prev !== tiles && (isBoardCleared(prev) || hasAnyMatch(prev, rows, cols))) {
+        if (prev !== tiles && (isBoardCleared(prev) || hasAnyMatch(prev, dims.rows, dims.cols))) {
           return prev;
         }
 
         let nextBoard = shuffleRemaining(prev);
         let attempts = 0;
-        while (!hasAnyMatch(nextBoard, rows, cols) && attempts < 50) {
+        while (!hasAnyMatch(nextBoard, dims.rows, dims.cols) && attempts < 50) {
           nextBoard = shuffleRemaining(nextBoard);
           attempts++;
         }
@@ -84,6 +89,8 @@ export function useGameBoard(initialLevel: number = 1, characterIds: readonly st
 
   return {
     tiles,
+    rows,
+    cols,
     setTiles,
     selectedIds,
     setSelectedIds,

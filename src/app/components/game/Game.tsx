@@ -149,6 +149,7 @@ export function Game() {
         <section className="hyper-game-stage flex h-full min-h-0 w-full flex-col items-center justify-center p-2 lg:p-8">
           <div className="hyper-main-frame w-full h-auto max-h-full my-0 flex flex-1 flex-col min-h-0 lg:h-auto lg:flex lg:flex-1 lg:my-0">
             <MobileGameHeader
+              level={game.level}
               timeLeft={game.timeLeft}
               maxTime={game.maxTime}
               score={game.score}
@@ -171,6 +172,9 @@ export function Game() {
                     <div className="hyper-sidebar-top">
                       <div className="hyper-score-card">
                         <HyperTitleBar className="hyper-score-title">{t("score", "Điểm")}</HyperTitleBar>
+                        <div className="text-xs font-black text-[#815a2c] tracking-wider uppercase mb-0.5 mt-2">
+                          {t("level", "Màn")} {game.level}
+                        </div>
                         <button
                           type="button"
                           className="hyper-score-total"
@@ -339,6 +343,7 @@ function DesktopTimer({ timeLeft, maxTime, isPaused }: { timeLeft: number; maxTi
 }
 
 function MobileGameHeader({
+  level,
   timeLeft,
   maxTime,
   score,
@@ -347,6 +352,7 @@ function MobileGameHeader({
   onSettings,
   pauseEnabled,
 }: {
+  level: number;
   timeLeft: number;
   maxTime: number;
   score: number;
@@ -358,21 +364,28 @@ function MobileGameHeader({
   const { t } = useTranslation();
   const timeProgress = Math.max(0, Math.min(100, (timeLeft / Math.max(1, maxTime)) * 100));
   return (
-    <header className="game-mobile-header flex flex-col shrink-0 gap-2 pb-2 lg:hidden px-2 pt-2">
-      {/* Timer and primary controls stay in the top row on phones. */}
-      <div className="flex items-center gap-2">
+    <header className="game-mobile-header flex flex-col shrink-0 gap-1.5 pb-1 lg:hidden px-2 pt-1">
+      {/* Top row: Level Badge + Timer + Primary controls */}
+      <div className="flex items-center gap-1.5">
         <div
-          className="game-mobile-progress hyper-panel flex min-w-0 flex-1 items-center gap-1.5 rounded-xl px-3 py-2"
+          className="game-mobile-level-badge hyper-panel shrink-0 flex items-center justify-center px-2.5 py-1.5 rounded-xl border border-[#d2aa6f] text-xs font-black text-[#6d3c16] bg-gradient-to-b from-[#fff9ea] to-[#f9dfa8] shadow-sm whitespace-nowrap"
+          aria-label={`${t("level", "Màn")} ${level}`}
+        >
+          <span>{t("level", "Màn")} {level}</span>
+        </div>
+
+        <div
+          className="game-mobile-progress hyper-panel flex min-w-0 flex-1 items-center gap-1.5 rounded-xl px-2.5 py-1.5"
           aria-label={`${t("time", "Thời gian")} ${timeLeft}s`}
         >
-          <HyperIcon name="clock" className="h-5 w-5 shrink-0 object-contain" />
+          <HyperIcon name="clock" className="h-4 w-4 shrink-0 object-contain" />
           <div className="game-mobile-progress-track min-w-0 flex-1" aria-hidden="true">
             <div className="game-mobile-progress-fill" style={{ width: `${timeProgress}%` }} />
           </div>
           <span className="shrink-0 text-xs font-black text-[var(--game-ink-muted)]">{timeLeft}s</span>
         </div>
 
-        <div className="hyper-panel hyper-mobile-actions flex items-center justify-center gap-1.5 p-1 rounded-xl border border-[#d2aa6f] shrink-0">
+        <div className="hyper-panel hyper-mobile-actions flex items-center justify-center gap-1 p-1 rounded-xl border border-[#d2aa6f] shrink-0">
           <button
             type="button"
             onClick={() => { playSfx("click"); onDashboard(); }}
@@ -388,29 +401,29 @@ function MobileGameHeader({
             className="hyper-action-orb-mobile flex items-center justify-center shrink-0"
             disabled={!pauseEnabled}
           >
-            <Pause size={24} strokeWidth={3} />
+            <Pause size={18} strokeWidth={3} />
           </button>
         </div>
       </div>
 
-      {/* Second Row: Hearts + Score (Centered & Enlarged) */}
+      {/* Second Row: Hearts + Score (Centered & Compact) */}
       <div className="game-mobile-stats flex w-full items-center justify-center">
         <div
-          className="game-mobile-stats-panel hyper-panel flex items-center justify-center gap-3 rounded-2xl px-5 py-1.5 border border-[#d2aa6f]"
+          className="game-mobile-stats-panel hyper-panel flex items-center justify-center gap-2.5 rounded-xl px-3.5 py-1 border border-[#d2aa6f]"
           role="group"
           aria-label={`${t("score", "Điểm")} ${score.toLocaleString("vi-VN")}; ${lives} ${t("lives_out_of_3", "trên 3 lượt")}`}
         >
           {/* Hearts */}
           <div className="flex gap-1">
             {[1, 2, 3].map(i => (
-              <HyperIcon key={i} name="heart" className={`w-6 h-6 object-contain ${i <= lives ? "" : "grayscale opacity-50"}`} />
+              <HyperIcon key={i} name="heart" className={`w-5 h-5 object-contain ${i <= lives ? "" : "grayscale opacity-50"}`} />
             ))}
           </div>
-          <div className="h-6 w-[2px] bg-[#d2aa6f]/50 mx-1 rounded-full"></div>
+          <div className="h-4 w-[2px] bg-[#d2aa6f]/50 mx-0.5 rounded-full"></div>
           {/* Score */}
-          <div className="flex items-center gap-1.5">
-            <HyperIcon name="trophy" className="h-6 w-6 object-contain" />
-            <span className="text-base font-black text-[#f4771a] drop-shadow-sm">{score.toLocaleString("vi-VN")}</span>
+          <div className="flex items-center gap-1">
+            <HyperIcon name="trophy" className="h-5 w-5 object-contain" />
+            <span className="text-sm font-black text-[#f4771a] drop-shadow-sm">{score.toLocaleString("vi-VN")}</span>
           </div>
         </div>
       </div>

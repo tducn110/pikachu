@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { memo, useEffect, useRef, useState } from "react";
 import { Application, Container, Graphics, NineSliceSprite, Rectangle, Sprite } from "pixi.js";
 import gsap from "gsap";
-import { getBoardSize, type PairTile, type Point, type TileKind } from "../../utils/pairMatchLogic";
+import { getBoardDimensions, getBoardSize, type PairTile, type Point, type TileKind } from "../../utils/pairMatchLogic";
 import { palette as c } from "./gameThemes";
 import { loadPikachuCharacterTextures, type CharacterTextures } from "./pixi/loadPikachuCharacterTextures";
 import { CHARACTER_BY_ID, TILE_ICON_FILL_RATIO } from "./pixi/pikachuCharacterCatalog";
@@ -55,17 +55,6 @@ interface BoardState {
 
 const toColor = (value: string) => Number.parseInt(value.slice(1), 16);
 const MAX_TILE_VIEWS = 16 * 16;
-
-function getBoardDimensions(tiles: PairTile[], level: number): { rows: number; cols: number } {
-  if (tiles.length === 0) return getBoardSize(level);
-  return tiles.reduce(
-    (dimensions, tile) => ({
-      rows: Math.max(dimensions.rows, tile.row + 1),
-      cols: Math.max(dimensions.cols, tile.col + 1),
-    }),
-    { rows: 0, cols: 0 },
-  );
-}
 
 /**
  * Pixi board renderer. React owns game state and HUD; Pixi owns the 256 tile
@@ -243,8 +232,8 @@ export const GameBoard = memo(function GameBoard({
         // The production frame is intentionally wider than it is tall. Keep
         // the playfield square by giving the frame independent side insets.
         const isMobile = screenWidth < 1024;
-        const frameInsetX = isMobile ? Math.max(4, screenWidth * 0.01) : Math.max(8, screenWidth * 0.075);
-        const frameInsetY = isMobile ? Math.max(4, screenHeight * 0.01) : Math.max(8, screenHeight * 0.045);
+        const frameInsetX = isMobile ? Math.max(2, screenWidth * 0.005) : Math.max(8, screenWidth * 0.075);
+        const frameInsetY = isMobile ? Math.max(2, screenHeight * 0.005) : Math.max(8, screenHeight * 0.045);
         const tileSize   = Math.min(
           Math.max(1, (screenWidth - frameInsetX * 2) / currentCols),
           Math.max(1, (screenHeight - frameInsetY * 2) / currentRows),
@@ -609,6 +598,9 @@ export const GameBoard = memo(function GameBoard({
       });
     };
     const resizeObserver = new ResizeObserver(() => {
+      if (appInitialized && !destroyed && host) {
+        app.renderer?.resize(host.clientWidth, host.clientHeight);
+      }
       comboFlash?.resize(app.screen);
       scheduleDraw();
     });
@@ -670,6 +662,7 @@ export const GameBoard = memo(function GameBoard({
         app.canvas.style.display = "block";
         app.canvas.style.width   = "100%";
         app.canvas.style.height  = "100%";
+        app.canvas.style.touchAction = "none";
 
         boardFrame = new NineSliceSprite({
           texture: panelTexture,
@@ -733,7 +726,7 @@ export const GameBoard = memo(function GameBoard({
       role="group"
       aria-label={t("pikachu_board", "Bàn chơi Ghép đôi Pikachu")}
       aria-busy={assetStatus === "loading"}
-      className="relative h-full w-full overflow-hidden"
+      className="relative h-full w-full overflow-hidden touch-none select-none"
     >
       {assetStatus !== "ready" && (
         <div

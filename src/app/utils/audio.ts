@@ -17,19 +17,19 @@ const SFX_SOURCES: Record<Sfx | UiSound, string> = {
 };
 
 const SFX_VOLUME: Record<Sfx | UiSound, number> = {
-  tap: 0.32,
-  click: 0.28,
-  close: 0.24,
-  toggle: 0.24,
-  match: 0.46,
-  wrong: 0.38,
-  timeout: 0.46,
-  win: 0.58,
-  reset: 0.3,
+  tap: 0.65,
+  click: 0.65,
+  close: 0.65,
+  toggle: 0.65,
+  match: 0.68,
+  wrong: 0.65,
+  timeout: 0.68,
+  win: 0.72,
+  reset: 0.65,
 };
 
 const BGM_SOURCE = "/BGMM_Lofi2.mp3";
-const BGM_VOLUME = 0.35;
+const BGM_VOLUME = 0.25;
 
 let sfxBank: Partial<Record<Sfx | UiSound, Howl>> = {};
 let bgm: Howl | null = null;

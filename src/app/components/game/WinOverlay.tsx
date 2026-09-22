@@ -40,11 +40,15 @@ export function WinOverlay({
         ✦
       </div>
       
-      <h2 id="win-title" className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-4 shadow-text">
+      <h2 id="win-title" className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-2 shadow-text">
         {t("completed", "HOÀN THÀNH!")}
       </h2>
+
+      <div className="text-sm font-black text-[#815a2c] uppercase tracking-wider mb-2">
+        {t("level", "Màn")} {game.level}
+      </div>
       
-      <div className={`text-[var(--hyper-orange)] font-black text-5xl mb-8 drop-shadow-md hyper-score-animate ${doubleClaimed ? 'doubling' : ''}`}>
+      <div className={`text-[var(--hyper-orange)] font-black text-5xl mb-6 drop-shadow-md hyper-score-animate ${doubleClaimed ? 'doubling' : ''}`}>
         {displayScore}
       </div>
 
