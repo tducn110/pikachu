@@ -39,11 +39,9 @@ export function PauseOverlay({
       <h2 id="pause-title" className="text-3xl font-black text-[var(--hyper-purple-ink)] uppercase mb-3 mt-2 shadow-text">
         {t("pause", "TẠM DỪNG")}
       </h2>
-      {pauseReason && (
+      {pauseReason === "host" && (
         <p className="mb-4 text-center text-sm font-bold text-[var(--hyper-purple-ink)]">
-          {pauseReason === "host"
-            ? t("pause_host", "Game đang tạm dừng bởi hệ thống.")
-            : t("pause_background", "Game đã tạm dừng khi bạn rời khỏi màn hình.")}
+          {t("pause_host", "Game đang tạm dừng bởi hệ thống.")}
         </p>
       )}
 
@@ -61,11 +59,9 @@ export function PauseOverlay({
           </div>
         </HyperModalButton>
       </div>
-      {!canContinue && (
+      {!canContinue && pauseReason === "host" && (
         <p className="mb-3 text-center text-sm font-bold text-[var(--hyper-purple-ink)]">
-          {pauseReason === "host"
-            ? t("pause_waiting_host", "Đợi hệ thống tiếp tục game để chơi tiếp.")
-            : t("pause_waiting_background", "Quay lại cửa sổ game để tiếp tục.")}
+          {t("pause_waiting_host", "Đợi hệ thống tiếp tục game để chơi tiếp.")}
         </p>
       )}
 
