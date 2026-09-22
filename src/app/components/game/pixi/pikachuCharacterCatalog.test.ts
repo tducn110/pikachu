@@ -129,7 +129,7 @@ function framePixels(image: DecodedPng, frame: AtlasFrame["frame"]): Buffer {
 
 describe("active Pikachu character catalog integrity", () => {
   it("has one active logical identity per verified visible character", () => {
-    expect(TOTAL_UNIQUE_CHARACTERS).toBe(19);
+    expect(TOTAL_UNIQUE_CHARACTERS).toBe(17);
     expect(CHARACTER_BY_ID.size).toBe(TOTAL_UNIQUE_CHARACTERS);
     expect(new Set(PIKACHU_CHARACTERS.map((character) => character.id)).size).toBe(TOTAL_UNIQUE_CHARACTERS);
     expect(new Set(PIKACHU_CHARACTERS.map((character) => `${character.pack}:${character.frame}`)).size)

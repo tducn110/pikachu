@@ -17,6 +17,7 @@ import { HyperIcon, HyperTitleBar, type HyperIconName } from "./hyperUi";
 import { Pause } from "lucide-react";
 import { useWinkIntegration } from "../../../integrations/wink/useWinkIntegration";
 import { isPlayableSession } from "../../utils/gameSessionState";
+import { areTexturesLoaded } from "./pixi/loadPikachuCharacterTextures";
 
 export function Game() {
   const { t } = useTranslation();
@@ -24,6 +25,9 @@ export function Game() {
   const [showDashboard, setShowDashboard] = useState(false);
   const [adPromptItem, setAdPromptItem] = useState<"hint" | "shuffle" | "bomb" | null>(null);
   const [isAdPlaying, setIsAdPlaying] = useState(false);
+  // Block gameplay until GameBoard has fully loaded all character textures.
+  // Reset to false on level transition so the next board must also finish loading first.
+  const [boardReady, setBoardReady] = useState(false);
   const lifecycle = useGameLifecycle();
   const wink = useWinkIntegration();
   const roundActiveRef = useRef(false);
@@ -36,18 +40,32 @@ export function Game() {
     }
   }, []);
 
+  const handleBoardReady = useCallback(() => {
+    setBoardReady(true);
+  }, []);
+
+  // When boardReady resets to false (level/restart transition) but textures are already
+  // cached, unlock immediately on the next animation frame so the game doesn't wait.
+  useEffect(() => {
+    if (!boardReady && areTexturesLoaded()) {
+      const raf = requestAnimationFrame(() => setBoardReady(true));
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [boardReady]);
+
   // This value reaches the running game before its status is available.
   const requestedPause = manualPause || lifecycle.pauseReason !== null;
+  const assetsLoading = !boardReady;
   const game = usePairMatchGame({
-    isPaused: requestedPause || showDashboard || adPromptItem !== null || lifecycle.hostPaused || lifecycle.backgroundPaused,
+    isPaused: assetsLoading || requestedPause || showDashboard || adPromptItem !== null || lifecycle.hostPaused || lifecycle.backgroundPaused,
     isAdPlaying,
     parentMuted: lifecycle.parentMuted,
     onRoundStart: handleRoundStart,
   });
   const sessionIsPlayable = isPlayableSession(game.status);
   // A completed, lost, or revive state owns its overlay. Pause never stacks on it.
-  const showPause = sessionIsPlayable && requestedPause;
-  const isPaused = !sessionIsPlayable || requestedPause || showDashboard || adPromptItem !== null || lifecycle.hostPaused || lifecycle.backgroundPaused;
+  const showPause = sessionIsPlayable && requestedPause && !assetsLoading;
+  const isPaused = assetsLoading || !sessionIsPlayable || requestedPause || showDashboard || adPromptItem !== null || lifecycle.hostPaused || lifecycle.backgroundPaused;
   const hasModal = showPause || showDashboard || adPromptItem !== null || game.status !== "playing";
 
   useEffect(() => {
@@ -78,6 +96,7 @@ export function Game() {
   const handleRestart = () => {
     roundActiveRef.current = false;
     roundEndedRef.current = false;
+    setBoardReady(false);
     handleAdStart();
     void requestInterstitialAd({
       type: "start",
@@ -92,6 +111,7 @@ export function Game() {
   const handleNextLevel = () => {
     roundActiveRef.current = false;
     roundEndedRef.current = false;
+    setBoardReady(false);
     handleAdStart();
     void requestInterstitialAd({
       type: "next",
@@ -239,6 +259,7 @@ export function Game() {
                   level={game.level}
                   combo={game.combo}
                   isPaused={isPaused}
+                  onAssetsReady={handleBoardReady}
                 />
                 {game.wrongIds.length === 2 && game.wrongReason && <WrongToast reason={game.wrongReason} />}
                 {game.shuffleNotice && <ShuffleToast />}

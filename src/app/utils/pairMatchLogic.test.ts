@@ -32,8 +32,10 @@ describe("getBoardSize", () => {
     expect(getBoardSize(1)).toEqual({ rows: 8, cols: 8 });
   });
 
-  it("progresses through 8,10,12,14,16 and caps at the final challenge", () => {
-    expect([1, 2, 3, 4, 5, 6].map((l) => getBoardSize(l).rows)).toEqual([8, 10, 12, 14, 16, 16]);
+  it("progresses through 8,10,12,14,16 (2 levels per size) and caps at the final challenge", () => {
+    expect([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((l) => getBoardSize(l).rows)).toEqual([
+      8, 8, 10, 10, 12, 12, 14, 14, 16, 16, 16,
+    ]);
   });
 });
 
@@ -236,18 +238,29 @@ describe("state helpers", () => {
     expect(isBoardCleared(tiles)).toBe(true);
   });
 
-  it("always applies vertical downward gravity, regardless of level", () => {
+  it("applies vertical downward gravity on odd levels and keeps positions on even levels", () => {
     const tiles = [
       { id: "a", kind: "A", row: 0, col: 0, removed: false },
       { id: "b", kind: "B", row: 1, col: 1, removed: false },
       { id: "c", kind: "C", row: 2, col: 0, removed: false },
     ];
 
-    for (const level of [1, 2, 3, 4, 5, 10]) {
+    // Odd levels (1, 3, 5) -> Gravity ON: tile 'a' falls to row 1, tile 'b' to row 2
+    for (const level of [1, 3, 5]) {
       const fallen = applyGravity(tiles, level, 3, 3);
       expect(fallen.map(({ id, row, col }) => ({ id, row, col }))).toEqual([
         { id: "a", row: 1, col: 0 },
         { id: "b", row: 2, col: 1 },
+        { id: "c", row: 2, col: 0 },
+      ]);
+    }
+
+    // Even levels (2, 4, 6) -> Gravity OFF: tiles stay in original positions
+    for (const level of [2, 4, 6]) {
+      const unchanged = applyGravity(tiles, level, 3, 3);
+      expect(unchanged.map(({ id, row, col }) => ({ id, row, col }))).toEqual([
+        { id: "a", row: 0, col: 0 },
+        { id: "b", row: 1, col: 1 },
         { id: "c", row: 2, col: 0 },
       ]);
     }

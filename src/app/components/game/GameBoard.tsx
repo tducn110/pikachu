@@ -24,6 +24,8 @@ interface Props {
   /** Current combo count – used to scale spark/flash effects. */
   combo: number;
   isPaused: boolean;
+  /** Called once when all character textures are loaded and the board is ready to play. */
+  onAssetsReady?: () => void;
 }
 
 interface TileView {
@@ -76,6 +78,7 @@ export const GameBoard = memo(function GameBoard({
   level,
   combo,
   isPaused,
+  onAssetsReady,
 }: Props) {
   const { t, i18n } = useTranslation();
   perfDiagnostics.count("react.gameBoardRender");
@@ -83,6 +86,7 @@ export const GameBoard = memo(function GameBoard({
   const { rows, cols } = getBoardDimensions(tiles, level);
   const hostRef = useRef<HTMLDivElement>(null);
   const onSelectRef = useRef(onSelect);
+  const onAssetsReadyRef = useRef(onAssetsReady);
   const layoutRef = useRef({ rows, cols });
   const stateRef = useRef<BoardState>({ tiles, selectedIds, wrongIds, hintIds, activePath, combo });
   const redrawRef = useRef<(() => void) | null>(null);
@@ -95,7 +99,9 @@ export const GameBoard = memo(function GameBoard({
   const [assetError, setAssetError] = useState<string | null>(null);
 
   onSelectRef.current = onSelect;
+  onAssetsReadyRef.current = onAssetsReady;
   layoutRef.current = { rows, cols };
+
   stateRef.current.tiles = tiles;
   stateRef.current.selectedIds = selectedIds;
   stateRef.current.wrongIds = wrongIds;
@@ -657,6 +663,7 @@ export const GameBoard = memo(function GameBoard({
         tileAssets  = assets;
         initialized = true;
         setAssetStatus("ready");
+        onAssetsReadyRef.current?.();
         host.appendChild(app.canvas);
         app.canvas.setAttribute("aria-label", t("pikachu_board", "Bàn chơi Ghép đôi Pikachu"));
         app.canvas.style.display = "block";
@@ -719,6 +726,14 @@ export const GameBoard = memo(function GameBoard({
   useEffect(() => {
     redrawRef.current?.();
   }, [tiles, selectedIds, wrongIds, hintIds, activePath, combo, rows, cols]);
+
+  // Notify parent whenever the board transitions to ready — covers both the first load
+  // and any subsequent level where the parent reset boardReady to false.
+  useEffect(() => {
+    if (assetStatus === "ready") {
+      onAssetsReadyRef.current?.();
+    }
+  }, [assetStatus]);
 
   return (
     <div

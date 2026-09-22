@@ -28,7 +28,7 @@ const SFX_VOLUME: Record<Sfx | UiSound, number> = {
   reset: 0.65,
 };
 
-const BGM_SOURCE = "/BGMM_Lofi2.mp3";
+const BGM_SOURCE = "/audio/bgm.mp3";
 const BGM_VOLUME = 0.25;
 
 let sfxBank: Partial<Record<Sfx | UiSound, Howl>> = {};

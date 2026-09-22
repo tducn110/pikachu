@@ -374,12 +374,13 @@ export function usePairMatchGame({
     board.setHintIds([]);
     board.setActivePath(match.path);
     setWrongReason(null);
-    setSupportStock((prev) => ({ ...prev, bomb: prev.bomb - 1 }));
     session.addScore(-200);
     session.addMove();
     audio.sfx("match");
 
     scheduleForCurrentRun(() => {
+      // Only decrement stock when the removal actually completes in this run
+      setSupportStock((prev) => ({ ...prev, bomb: Math.max(0, prev.bomb - 1) }));
       board.removePair(match.first.id, match.second.id, session.level, rows, cols);
       board.setActivePath(null);
       lockRef.current = false;

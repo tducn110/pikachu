@@ -65,11 +65,10 @@ export const PIKACHU_CHARACTERS: readonly CharacterDefinition[] = [
   // lion dance is visually very wide — scale down a touch
   { id: "legacy:09", pack: "legacy", frame: "tile_09_lion_dance",       label: "Múa lân", iconScaleX: 0.88, iconScale: 0.97 },
   { id: "legacy:10", pack: "legacy", frame: "tile_10_goofy_yellow_dragon", label: "Rồng vàng", iconScale: 1.10 },
-  // ── New 035–044 pack (9 chars) — half-portrait crops need tighter scale ────
+  // ── New 035–044 pack (7 chars) — half-portrait crops need tighter scale ────
   // muscular doge is extremely large in the source portrait
   { id: "new:035",   pack: "new",    frame: "035_doge_muscular.webp",    label: "Doge cơ bắp",     iconScaleX: 0.82, iconScale: 0.96 },
-  { id: "new:036",   pack: "new",    frame: "036_buffalo_cheerful.webp", label: "Buffalo vui vẻ" },
-  { id: "new:037",   pack: "new",    frame: "037_dinosaur_green.webp",   label: "Khủng long xanh" },
+  // new:036 (buffalo_cheerful) and new:037 (dinosaur_green) excluded — broken assets
   { id: "new:038",   pack: "new",    frame: "038_goat_excited.webp",     label: "Dê hướng khởi", iconScale: 1.07 },
   { id: "new:039",   pack: "new",    frame: "039_bear_conical_hat.webp", label: "Gấu nón lá", iconScale: 1.03 },
   { id: "new:040",   pack: "new",    frame: "040_bear_bandaged.webp",    label: "Gấu băng bó" },
@@ -78,7 +77,7 @@ export const PIKACHU_CHARACTERS: readonly CharacterDefinition[] = [
   { id: "new:043",   pack: "new",    frame: "043_cat_tongue_out.webp",   label: "Mèo le lưỡi", iconScale: 1.03 },
 ] as const;
 
-export const TOTAL_UNIQUE_CHARACTERS = PIKACHU_CHARACTERS.length; // 19
+export const TOTAL_UNIQUE_CHARACTERS = PIKACHU_CHARACTERS.length; // 17
 
 /** Quick lookup: characterId → CharacterDefinition */
 export const CHARACTER_BY_ID: ReadonlyMap<string, CharacterDefinition> = new Map(

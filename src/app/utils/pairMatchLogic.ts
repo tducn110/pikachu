@@ -10,7 +10,8 @@ export interface PairTile {
 }
 
 export const BOARD_SIZES_DESKTOP = [8, 10, 12, 14, 16] as const;
-export const MAX_BOARD_LEVEL = BOARD_SIZES_DESKTOP.length;
+/** Each desktop size is played twice (gravity on → gravity off), so 10 levels total. */
+export const MAX_BOARD_LEVEL = BOARD_SIZES_DESKTOP.length * 2;
 
 export const BOARD_SIZES_MOBILE = [
   { cols: 5, rows: 6 }, // 30
@@ -38,9 +39,18 @@ export function getBoardDimensions(tiles: PairTile[], fallbackLevel: number = 1)
   );
 }
 
+/**
+ * Returns whether gravity (tile-falling) is active for the given level.
+ * Odd levels → gravity ON, Even levels → gravity OFF.
+ * Pattern: level 1 (fall) → level 2 (no fall, same size) → level 3 (fall, bigger) → …
+ */
+export function isGravityLevel(level: number): boolean {
+  return level % 2 !== 0;
+}
+
 export function getBoardSize(level: number, isMobile = getIsMobile()) {
   if (isMobile) {
-    // 2 levels per size
+    // 2 levels per size: level 1-2 → size[0], level 3-4 → size[1], …
     const sizeIndex = Math.max(0, Math.floor((Math.max(1, level) - 1) / 2));
     const maxIndex = BOARD_SIZES_MOBILE.length - 1;
     const base = BOARD_SIZES_MOBILE[Math.min(sizeIndex, maxIndex)];
@@ -53,7 +63,10 @@ export function getBoardSize(level: number, isMobile = getIsMobile()) {
     }
     return { cols: base.cols, rows: base.rows };
   } else {
-    const size = BOARD_SIZES_DESKTOP[Math.min(Math.max(level, 1), MAX_BOARD_LEVEL) - 1];
+    // 2 levels per size: level 1-2 → size[0], level 3-4 → size[1], …
+    const sizeIndex = Math.max(0, Math.floor((Math.max(1, level) - 1) / 2));
+    const maxIndex = BOARD_SIZES_DESKTOP.length - 1;
+    const size = BOARD_SIZES_DESKTOP[Math.min(sizeIndex, maxIndex)];
     return { rows: size, cols: size };
   }
 }
@@ -375,12 +388,20 @@ export function shuffleRemaining(tiles: PairTile[], seed?: number): PairTile[] {
 }
 
 /**
- * Make every remaining tile fall vertically to the bottom of its own column.
+ * Apply gravity conditionally based on level parity:
+ *   - Odd level  (1, 3, 5, …) → gravity ON  : tiles fall to the bottom of their column
+ *   - Even level (2, 4, 6, …) → gravity OFF : tiles stay in place
  *
- * `level` remains in the signature so existing callers keep their stable
- * contract, but gravity is deliberately no longer level-dependent.
+ * This creates the pattern: same board size played twice, first with falling tiles,
+ * then without; then board size increases and the cycle repeats.
  */
-export function applyGravity(tiles: PairTile[], _level: number, rows: number, cols: number): PairTile[] {
+export function applyGravity(tiles: PairTile[], level: number, rows: number, cols: number): PairTile[] {
+  if (!isGravityLevel(level)) {
+    // Even level — no gravity, tiles stay where they are
+    return tiles;
+  }
+
+  // Odd level — tiles fall vertically to the bottom of their column
   const grid: (PairTile | null)[][] = Array(rows)
     .fill(null)
     .map(() => Array(cols).fill(null));
@@ -404,7 +425,6 @@ export function applyGravity(tiles: PairTile[], _level: number, rows: number, co
     }
   }
 
-  // Map the new coordinates back to the tiles
   return tiles.map((t) => {
     if (t.removed) return t;
     for (let r = 0; r < rows; r++) {
@@ -420,3 +440,4 @@ export function applyGravity(tiles: PairTile[], _level: number, rows: number, co
     return t;
   });
 }
+

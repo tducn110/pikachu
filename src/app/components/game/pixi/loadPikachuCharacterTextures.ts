@@ -18,11 +18,20 @@ import {
 export type CharacterTextures = ReadonlyMap<string, Texture>;
 
 let cachedPromise: Promise<CharacterTextures> | null = null;
+let cachedTextures: CharacterTextures | null = null;
+
+/** Returns true once textures have been resolved and are available immediately. */
+export function areTexturesLoaded(): boolean {
+  return cachedTextures !== null;
+}
 
 /** Call this once. Returns the same Promise on subsequent calls. */
 export function loadPikachuCharacterTextures(): Promise<CharacterTextures> {
   if (!cachedPromise) {
-    cachedPromise = doLoad();
+    cachedPromise = doLoad().then((textures) => {
+      cachedTextures = textures;
+      return textures;
+    });
   }
   return cachedPromise;
 }
